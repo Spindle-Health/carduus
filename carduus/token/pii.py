@@ -139,11 +139,13 @@ def normalize_pii(
 ) -> DataFrame:
     return df.select(
         *[
-            pii_transforms[column]
-            .normalize(df[column], df.schema[column].dataType)
-            .alias(column)
-            if column in pii_transforms
-            else col(column)
+            (
+                pii_transforms[column]
+                .normalize(df[column], df.schema[column].dataType)
+                .alias(column)
+                if column in pii_transforms
+                else col(column)
+            )
             for column in df.columns
         ]
     )

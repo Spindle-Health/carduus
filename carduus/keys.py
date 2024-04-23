@@ -34,9 +34,11 @@ def generate_pem_files(
             private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.BestAvailableEncryption(passphrase)
-                if passphrase
-                else serialization.NoEncryption(),
+                encryption_algorithm=(
+                    serialization.BestAvailableEncryption(passphrase)
+                    if passphrase
+                    else serialization.NoEncryption()
+                ),
             )
         )
     with open(public_key_filename, "wb") as f:

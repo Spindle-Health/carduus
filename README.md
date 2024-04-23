@@ -22,7 +22,7 @@ You can install the `carduus` library into your Python environment using `pip`
 pip install carduus
 ```
 
-See the full API documentation and an example usage for further documentaiton.
+See the full [API](https://spindle-health.github.io/carduus/api/) and the [example usage](https://spindle-health.github.io/carduus/databricks/) for further documentaiton.
 
 ## Contributing
 
