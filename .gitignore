@@ -1,0 +1,20 @@
+# Spark
+spark-warehouse/
+
+# Python
+dist/
+.pytest_cache/
+.venv/
+__pycache__/
+.coverage
+htmlcov/
+
+# Mkdocs
+site/
+
+# Editors
+.idea
+*.iml
+.lsp
+.vscode
+*.code-workspace
