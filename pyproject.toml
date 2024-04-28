@@ -22,6 +22,7 @@ mypy = "^0.991"
 mkdocs = "^1.5"
 mkdocs-material = "^9.5"
 mkdocstrings = { version = "^0.24", extras = ["python"] }
+mkdocs-jupyter = "^0.24"
 
 [build-system]
 requires = ["poetry-core"]
