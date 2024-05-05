@@ -1,4 +1,4 @@
-# Contributing to the OPPRL protocol
+# Contributing to the OPPRL Protocol
 
 > :warning: This specification is incomplete.
 

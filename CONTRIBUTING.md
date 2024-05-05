@@ -67,7 +67,7 @@ When working on a code change or addition to carduus, it is expected that all ch
 pass existing tests and probably introduce new tests to ensure stability of future changes. 
 
 Before you are able to run tests, you must have a virtual environment for the project. Carduus uses 
-[Poetry]() to manage Python environments. Once poetry is installed, run the following in 
+[Poetry](https://python-poetry.org/) to manage Python environments. Once poetry is installed, run the following in 
 the root directory of the project.
 
 ```

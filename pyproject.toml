@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "carduus"
 version = "0.1.0"
-description = ""
+description = "PySpark implementation of the Open Privacy Preserving Record Linkage protocol."
 authors = ["Eddie Pantridge <eddie@spindlehealth.com>"]
 readme = "README.md"
 packages = [{ include = "carduus" }]
 
 [tool.poetry.dependencies]
-python = "^3.10.12"
+python = "^3.10"
 pyspark = "^3.5"
 pandas = "^2.2.0"
 pyarrow = "^15.0.0"
@@ -16,6 +16,7 @@ cryptography = "^42.0.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2"
+pyspark = { version = "^3.5", extras = ["connect"] }
 coverage = "^7.4"
 black = "^24.4"
 mypy = "^0.991"

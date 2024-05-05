@@ -1,11 +1,16 @@
 site_name: Carduus
 nav:
   - Home: README.md
+  - Getting Started: guides/getting-started.md
   - API: api.md
-  - Databricks: CarduusDatabricksDemo.ipynb
+  - Guides:
+    - Custom Key Provider: guides/custom-key-provider.md
+    - Carduus on Databricks: guides/databricks.ipynb
+    - Defining Token Specs: guides/custom-tokens.md
+    - Using Custom PII: guides/custom-pii.md
   - OPPRL:
     - About: opprl.md
-    - Specification: opprl/spec.md
+    - Specification: opprl/PROTOCOL.md
     - Contributing: opprl/contrib.md
   - Project:
     - Contributing: CONTRIBUTING.md

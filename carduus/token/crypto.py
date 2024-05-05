@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 # reused, however an attacker can use a chosen-plaintext attack to attack specific
 # records. https://en.wikipedia.org/wiki/Chosen-plaintext_attack
 #
-# When transfering data between parties we use RSA with OAEP so that datasets intercepted
+# When transferring data between parties we use RSA with OAEP so that datasets intercepted
 # by untrusted third parties cannot exploit this vulnerability.
 
 DEFAULT_NONCE = bytes([0] * 12)
