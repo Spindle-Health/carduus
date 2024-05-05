@@ -5,14 +5,14 @@
 > This specification is incomplete and actively being written collaboratively in the open. Many sections are missing and the specifics may change dramatically.
 >
 > If you would like to join 
->
+
 > Authors of OPPRL implementations should expect breaking changes, and interoperability between implementation cannot be guarenteed until an official version 1.0 is published.
 
-Privacy Preserving Record Linkage (PPRL) systems are used to obfuscate identifying attributes or other sensitive information about the subjects described in the records of a dataset while still preserving the ability to link records pertaining to the same subject through the use of an encrypted token. This practice is sometimes referred to as "tokenization" and is one of the components of data deidenfication.
+Privacy Preserving Record Linkage (PPRL) is crucial component to data de-identification systems. PPRL obfuscate identifying attributes or other sensitive information about the subjects described in the records of a dataset while still preserving the ability to link records pertaining to the same subject through the use of an encrypted token. This practice is sometimes referred to as "tokenization" and is one of the components of data deidenfication.
 
-The task of PPRL is to replace the attributes of a every record denoting Personally Identifiable Information (PII) with a token produced by a one-way cryptographic function. This prevents observers of the tokenized data from reversing the token into the sensitive PII attributes. The tokens are produced deterministically such that input records with the same, or similar, PII attributes will produce an identical token. This allows user of multiple tokenized data assets to associate records that are highly likely to belong to the same data subject without having acces to PII.
+The task of PPRL is to replace the attributes of a every record denoting Personally Identifiable Information (PII) with a token produced by a one-way cryptographic function. This prevents observers of the tokenized data from obtaining the PII. The tokens are produced deterministically such that input records with the same, or similar, PII attributes will produce an identical token. This allows practitioners to associate records across datasets that are highly likely to belong to the same data subject without having acces to PII.
 
-Tokenization is also used when data is shared between organizations to limit the scope of damages in the event that one organization's data is compromised. Each party's tokens are created via encryption using a different secret key so that any compromised data asset is only matchable to other datasets mantained by the same party. During data sharing transactions, a specific "transcryption" data flow is used to re-encrpt the sender's tokens into tokens that match the receipient's data without recovering the underlying PII.
+Tokenization is also used when data is shared between organizations to limit, or in some cases fully mitigate, the risk of subject re-identification in the event that an untrusted third party gains access to a dataset containing sensitive data. Each party produced encrypted tokens using a different secret key so that any compromised data asset is, at worst, only matchable to other datasets mantained by the same party. During data sharing transactions, a specific "transcryption" data flow is used to first re-encrypt the sender's tokens into ephemeral tokens that do not match tokens in any other dataset and can only be ingested using the receipiants secret key. At no point in the "transcryption" data flow is the orginoal PII used.
 
 ## About this specification
 
@@ -54,6 +54,8 @@ Inputs:
 ## 2 Transcyption
 
 The re-encryption of tokens for the purpose of safely delivering tokenized data between parties.
+
+Ephemeral tokens.
 
 ### Requirements
 

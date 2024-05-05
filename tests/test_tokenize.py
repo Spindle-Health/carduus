@@ -2,11 +2,11 @@ from pyspark.sql import Column, SparkSession, Row
 from pyspark.sql.types import DataType, StructType, StructField, LongType, StringType
 from pyspark.sql.functions import regexp_replace, substring
 from pyspark.testing.utils import assertDataFrameEqual, assertSchemaEqual
-from carduus.keys import InMemoryKeyService
+from carduus.keys import SimpleKeyProvider
 from carduus.token import (
     OpprlPii,
     OpprlToken,
-    TokenInfo,
+    TokenSpec,
     tokenize,
     transcrypt_out,
     transcrypt_in,
@@ -15,7 +15,7 @@ from carduus.token.pii import PiiTransform
 
 
 def test_tokenize_and_transcrypt_opprl(
-    spark: SparkSession, organization_b_key_service: InMemoryKeyService
+    spark: SparkSession, acme_key_provider: SimpleKeyProvider
 ):
     tokens = tokenize(
         (
@@ -53,20 +53,20 @@ def test_tokenize_and_transcrypt_opprl(
                 [
                     Row(
                         id=1,
-                        opprl_token_1="Ly3w2PppIjtu2LC03FXWTUYrb3WWiiFoETjxnbhrOXb8oCmUrxbs69QfqVdPafqMdRVozMoNt+m7\r\nAvJYG/LLytaArWrW36LOoEINLuNd0mE=",
-                        opprl_token_2="wN002PsjouMwmEQTbqOlwxlNrMU9gTjlYoX3kLTokrgNOnwaY9KuHZKnAwnBomGnJd3IaliZF8lE\r\nJwGgzhDScAnK9YlL0bE3vsJTlLseIkY=",
+                        opprl_token_1="NJQZ0hNk40pt5aFitlwdx6k2Te7hMSMw1UHzNdgP1aUYbqaFbGSe3tRn4kL/OxsFJit9VhRDYRaw\r\nUDYzKivYlLm2EzKCO0+nC9rJXfIFwdo=",
+                        opprl_token_2="l6MNGG4InDZCnVX5/h3ajn1m1rCoko062CD8the2nkKO3Y0fARGZ5p4BP3pXPp3HOL603KCwpWLI\r\nXMN8fnsG3D4Tea/WOQX5kB1OQ28t2L0=",
                     ),
                     Row(
                         id=2,
-                        opprl_token_1="Ly3w2PppIjtu2LC03FXWTUYrb3WWiiFoETjxnbhrOXb8oCmUrxbs69QfqVdPafqMdRVozMoNt+m7\r\nAvJYG/LLytaArWrW36LOoEINLuNd0mE=",
-                        opprl_token_2="wN002PsjouMwmEQTbqOlwxlNrMU9gTjlYoX3kLTokrgNOnwaY9KuHZKnAwnBomGnJd3IaliZF8lE\r\nJwGgzhDScAnK9YlL0bE3vsJTlLseIkY=",
+                        opprl_token_1="NJQZ0hNk40pt5aFitlwdx6k2Te7hMSMw1UHzNdgP1aUYbqaFbGSe3tRn4kL/OxsFJit9VhRDYRaw\r\nUDYzKivYlLm2EzKCO0+nC9rJXfIFwdo=",
+                        opprl_token_2="l6MNGG4InDZCnVX5/h3ajn1m1rCoko062CD8the2nkKO3Y0fARGZ5p4BP3pXPp3HOL603KCwpWLI\r\nXMN8fnsG3D4Tea/WOQX5kB1OQ28t2L0=",
                     ),
                 ]
             )
         ),
     )
     sent_tokens = transcrypt_out(
-        tokens, token_columns=["opprl_token_1", "opprl_token_2"], destination="OrganizationB"
+        tokens, token_columns=["opprl_token_1", "opprl_token_2"], recipient="AcmeCorp"
     )
     assertSchemaEqual(
         sent_tokens.schema,
@@ -78,27 +78,27 @@ def test_tokenize_and_transcrypt_opprl(
             ]
         ),
     )
-    # When transfering between organizations, tokens from the same PII should _not_ be equal.
+    # When transfering between parties, tokens from the same PII should _not_ be equal.
     assert sent_tokens.distinct().count() == 2
 
     assertDataFrameEqual(
         transcrypt_in(
             sent_tokens,
             token_columns=["opprl_token_1", "opprl_token_2"],
-            key_service=organization_b_key_service,
+            key_provider=acme_key_provider,
         ),
         (
             spark.createDataFrame(
                 [
                     Row(
                         id=1,
-                        opprl_token_1="/abo0bFAIS934MJQ7TXdKVhj1SuFUbVOt6JbuQNismBm9+btDWVSuAGFcDqVwiJviKxe5WBIJwvj\r\nbyWb1qaE6b1CjbdFmTicpYuyDbkIo+8=",
-                        opprl_token_2="UEI5gcYVk1bn4cGHOl6lVOu8N/VTVKyNlL+MwKRuwqGih28RWg4xBMoTPWEpjY4JqEpE5ftLnEAV\r\nG/r0GiRJgrfzbqa8i2ulVo79X5bUqnY=",
+                        opprl_token_1="U/JYKVLQWSUrpvJ1D03pvKmnhlgUTFjHaPtS0pZBLSqrDCOkBOR/mDf9xFt/Cr3AB8hI00oEkuun\r\nCTvNV3zbgdz9Y0jcwiI16zn51jSkhhM=",
+                        opprl_token_2="GDV/IQ0x6ZR/Gtl+nFOMOoKtTJ6gOHTvVJoaZZhP0BHUsymHbw+pyF9Cbjr0Q/Apa07wvN93CBnr\r\n4aBi8vvCDxi0Qg8x8wJf+yZZpwFR3Dw=",
                     ),
                     Row(
                         id=2,
-                        opprl_token_1="/abo0bFAIS934MJQ7TXdKVhj1SuFUbVOt6JbuQNismBm9+btDWVSuAGFcDqVwiJviKxe5WBIJwvj\r\nbyWb1qaE6b1CjbdFmTicpYuyDbkIo+8=",
-                        opprl_token_2="UEI5gcYVk1bn4cGHOl6lVOu8N/VTVKyNlL+MwKRuwqGih28RWg4xBMoTPWEpjY4JqEpE5ftLnEAV\r\nG/r0GiRJgrfzbqa8i2ulVo79X5bUqnY=",
+                        opprl_token_1="U/JYKVLQWSUrpvJ1D03pvKmnhlgUTFjHaPtS0pZBLSqrDCOkBOR/mDf9xFt/Cr3AB8hI00oEkuun\r\nCTvNV3zbgdz9Y0jcwiI16zn51jSkhhM=",
+                        opprl_token_2="GDV/IQ0x6ZR/Gtl+nFOMOoKtTJ6gOHTvVJoaZZhP0BHUsymHbw+pyF9Cbjr0Q/Apa07wvN93CBnr\r\n4aBi8vvCDxi0Qg8x8wJf+yZZpwFR3Dw=",
                     ),
                 ]
             )
@@ -110,7 +110,7 @@ class ZipcodeTransform(PiiTransform):
     def normalize(self, column: Column, dtype: DataType) -> Column:
         return regexp_replace(column, "[^0-9]", "")
 
-    def enhancments(self, column: Column) -> dict[str, Column]:
+    def enhancements(self, column: Column) -> dict[str, Column]:
         return {"zip3": substring(column, 1, 3)}
 
 
@@ -155,7 +155,7 @@ def test_custom_pii_and_token(spark: SparkSession):
                 "zipcode": ZipcodeTransform(),
             },
             tokens=[
-                TokenInfo("custom_token", ("last_name", "zip3")),
+                TokenSpec("custom_token", ("last_name", "zip3")),
                 OpprlToken.token1,
             ],
         ),
@@ -165,17 +165,17 @@ def test_custom_pii_and_token(spark: SparkSession):
                     Row(
                         id=1,
                         custom_token="a4l0zaphD0cOzrrRAsQR4++7c91z+wrhZURjlUQszMHS2H82q5dUzYNmsPaVTHRDVtojQKkvKcj0\r\nziGvRBdKxoqp6b3KgkxAoN9EzbPGQJQ=",
-                        opprl_token_1="xsznxClPMFc99UQVJNaprl7a54CTltgSQRNm3e2tMyRrJHlx4ig/hyq2PnhzIg16J9fCCFNMy6g9\r\nweng0bdyy/ZFslqMijL5D7gEDzX45zw=",
+                        opprl_token_1="tqwyRFi77r48A2FRj6O3KmHm9btLa1dxJYn52DpdEy3OQ0j7iuvjwYgems1SFmfOqHJ5KnK7UxzM\r\nCi2TTaJWwbnho6J7TVvPhgkNU9U0ot4=",
                     ),
                     Row(
                         id=2,
                         custom_token="a4l0zaphD0cOzrrRAsQR4++7c91z+wrhZURjlUQszMHS2H82q5dUzYNmsPaVTHRDVtojQKkvKcj0\r\nziGvRBdKxoqp6b3KgkxAoN9EzbPGQJQ=",
-                        opprl_token_1="LkVV0j3nRIRGox7Od2kDOY2rRZTI9ZqaFnglRyMYwS5i1MyT4GJwVDyT9/KaAeU7LinYuLB2HMjp\r\nN0whbQKhD4Z2Pb4y8uR6yIcB2q/eKKM=",
+                        opprl_token_1="Ui78f0vu3cD01mdnP+1E1yt2Qn6AZu0oA1G2YbRWUBAnTvl6SO+s3cJsHlRkL40LR4IMSb+maEDa\r\n5J4ZgNxFD7agtt9wOE8NurHCIrmiRs8=",
                     ),
                     Row(
                         id=3,
                         custom_token="mbWIfUp4H/1QVWKF+aNuHfJfpUgnJrifZndPdVquuYcRiKJjG21jQ/71pAnlvDNjTNq3k0mxlKhW\r\nNaypvBc0ghNfmvS1mPfag6sr12dBu1I=",
-                        opprl_token_1="d2tUj3yRFPIBSwR/ntUi8v1B/A9H+Q0iNwlz0+OVpO54MER9bRnTgHxOO8Q4IM+gdoxKGJGV9STb\r\n6DH2hxKIb50v6IFa+StqSnKRy7GJG4U=",
+                        opprl_token_1="t+Yg6k4aOm5xMOMjT1nUCVbw1xM6mITKRx/APB+oU0dNo/AN2q/p20Pu2fiKd4wX5iFVK119DJAH\r\nYkFJYuI1BxgLBrzkiQKdEJKn1kMzA6k=",
                     ),
                 ]
             )

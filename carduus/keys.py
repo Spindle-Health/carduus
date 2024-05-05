@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-from os import PathLike
-from pathlib import Path
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.hashes import Hash, SHAKE256
@@ -9,61 +7,54 @@ from pyspark.sql import SparkSession
 
 
 __all__ = [
-    "generate_pem_files",
-    "EncryptionKeyService",
-    "SparkConfKeyService",
-    "InMemoryKeyService",
+    "generate_pem_keys",
+    "EncryptionKeyProvider",
+    "SparkConfKeyProvider",
+    "SimpleKeyProvider",
 ]
 
 
-def generate_pem_files(
-    private_key_filename: PathLike,
-    public_key_filename: PathLike,
-    passphrase: bytes | None = None,
-):
-    private_key = rsa.generate_private_key(
+def generate_pem_keys(key_size: int = 2048) -> tuple[bytes, bytes]:
+    """Generates a fresh RSA key pair.
+
+    Arguments:
+        key_size:
+            The size (in bits) of the key.
+
+    Returns:
+        A tuple containing the private key and public key bytes. Both in the PEM encoding.
+
+    """
+    key = rsa.generate_private_key(
         public_exponent=65537,
-        key_size=2048,
+        key_size=key_size,
     )
-    if Path(private_key_filename).exists():
-        raise IOError(
-            f"{private_key_filename} already exists. Be careful when changing PEM files; existing tokens may become unreadable."
-        )
-    with open(private_key_filename, "wb") as f:
-        f.write(
-            private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=(
-                    serialization.BestAvailableEncryption(passphrase)
-                    if passphrase
-                    else serialization.NoEncryption()
-                ),
-            )
-        )
-    with open(public_key_filename, "wb") as f:
-        f.write(
-            private_key.public_key().public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo,
-            )
-        )
+    private = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    public = key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    return private, public
 
 
-class EncryptionKeyService(ABC):
-    """Abstract base class for key services. Can be implemented to call out whichever
+class EncryptionKeyProvider(ABC):
+    """Abstract base class for serving encryption keys to carduus. Can be implemented to call out to whichever
     service you use to manage encryption keys.
     """
 
     @abstractmethod
     def private_key(self) -> bytes:
         """Provides your private key."""
-        pass
+        ...
 
     @abstractmethod
-    def public_key_of(self, profile: str) -> bytes:
-        """Provides the public key of a specific profiles (aka partner) that you share data with."""
-        pass
+    def public_key_of(self, recipient: str) -> bytes:
+        """Provides the public key of a specific recipient that you share data with."""
+        ...
 
     def aes_key(self) -> bytes:
         digest = Hash(SHAKE256(32))
@@ -71,13 +62,13 @@ class EncryptionKeyService(ABC):
         return digest.finalize()
 
 
-def _profile_public_key_not_found(service: EncryptionKeyService, profile: str):
+def _recipient_public_key_not_found(service: EncryptionKeyProvider, recipient: str):
     return KeyError(
-        f"No public key for profile {profile} found in {service.__class__.__qualname__}."
+        f"No public key for profile {recipient} found in {service.__class__.__qualname__}."
     )
 
 
-class InMemoryKeyService(EncryptionKeyService):
+class SimpleKeyProvider(EncryptionKeyProvider):
     def __init__(
         self,
         private_key: bytes,
@@ -89,19 +80,19 @@ class InMemoryKeyService(EncryptionKeyService):
     def private_key(self) -> bytes:
         return self._private_key
 
-    def public_key_of(self, profile: str) -> bytes:
-        key = self.public_keys.get(profile)
+    def public_key_of(self, recipient: str) -> bytes:
+        key = self.public_keys.get(recipient)
         if not key:
-            raise _profile_public_key_not_found(self, profile)
+            raise _recipient_public_key_not_found(self, recipient)
         return key
 
-    def add_profile(self, profile: str, key: bytes):
-        self.public_keys[profile] = key
+    def add_profile(self, recipient: str, key: bytes):
+        self.public_keys[recipient] = key
 
 
-class SparkConfKeyService(EncryptionKeyService):
-    ENCRYPTED_PRIVATE_KEY_CONF = "carduus.token.privateKey"
-    PUBLIC_KEY_PROFILE_CONF = "carduus.token.publicKey.{profile}"
+class SparkConfKeyProvider(EncryptionKeyProvider):
+    PRIVATE_KEY_CONF = "carduus.token.privateKey"
+    PUBLIC_KEY_CONF = "carduus.token.publicKey.{recipient}"
 
     def private_key(self) -> bytes:
         pem = self._read_conf()
@@ -113,8 +104,8 @@ class SparkConfKeyService(EncryptionKeyService):
             encryption_algorithm=serialization.NoEncryption(),
         )
 
-    def public_key_of(self, profile: str) -> bytes:
-        pem = self._read_conf(profile)
+    def public_key_of(self, recipient: str) -> bytes:
+        pem = self._read_conf(recipient)
         key = serialization.load_pem_public_key(pem, None)
         assert isinstance(key, rsa.RSAPublicKey)
         return key.public_bytes(
@@ -122,18 +113,23 @@ class SparkConfKeyService(EncryptionKeyService):
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         )
 
-    def add_profile(self, profile: str, key: bytes):
+    def add_profile(self, recipient: str, key: bytes):
         SparkSession.active().conf.set(
-            self.PUBLIC_KEY_PROFILE_CONF.format(profile=profile), key.decode("utf-8")
+            self.PUBLIC_KEY_CONF.format(recipient=recipient), key.decode("utf-8")
         )
 
-    def _read_conf(self, profile: str | None = None) -> bytes:
+    def _read_conf(self, recipient: str | None = None) -> bytes:
         conf_key = (
-            self.PUBLIC_KEY_PROFILE_CONF.format(profile=profile)
-            if profile
-            else self.ENCRYPTED_PRIVATE_KEY_CONF
+            self.PUBLIC_KEY_CONF.format(recipient=recipient)
+            if recipient
+            else self.PRIVATE_KEY_CONF
         )
-        # @TODO Consider improving the error message when conf key is not found.
-        conf_val = SparkSession.active().conf.get(conf_key)
-        assert conf_val, f"No spark config {conf_key} set."
+        conf_val = SparkSession.active().conf.get(conf_key, None)
+        if not conf_val:
+            if recipient:
+                raise _recipient_public_key_not_found(self, recipient)
+            else:
+                raise KeyError(
+                    f'Carduus private key found. Did you set the Spark config "{self.PRIVATE_KEY_CONF}"?'
+                )
         return conf_val.encode()

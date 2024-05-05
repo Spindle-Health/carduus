@@ -53,7 +53,7 @@ class PiiTransform(ABC):
         """
         return column
 
-    def enhancments(self, column: Column) -> dict[str, Column]:
+    def enhancements(self, column: Column) -> dict[str, Column]:
         """A collection of PII attributes that can be automatically derived from a given normalized PII attribute
 
 
@@ -80,7 +80,7 @@ class NameTransform(PiiTransform):
         # @TODO Should spaces be stripped out?
         return normalize_text(regexp_replace(column, "[^a-zA-Z ]", ""))
 
-    def enhancments(self, column: Column) -> dict[str, Column]:
+    def enhancements(self, column: Column) -> dict[str, Column]:
         return {
             self.enhancement_prefix + "_initial": first_char(column),
             self.enhancement_prefix + "_soundex": soundex(column),
@@ -119,7 +119,7 @@ class DateTransform(PiiTransform):
             f"Cannot normalize column of type {from_type} into a DateType column. Column: {column}."
         )
 
-    def enhancments(self, column: Column) -> dict[str, Column]:
+    def enhancements(self, column: Column) -> dict[str, Column]:
         return {
             self.enhancement_prefix + "_year": year(column),
             self.enhancement_prefix + "_month": month(column),
@@ -160,13 +160,13 @@ def enhance_pii(
     for column in df.columns:
         all_columns.append(col(column))
         if column in pii_transforms:
-            enhancments = pii_transforms[column].enhancments(col(column))
+            enhancements = pii_transforms[column].enhancements(col(column))
             all_columns.extend(
                 [
                     enhancement_col.alias(enhancement_name)
-                    for enhancement_name, enhancement_col in enhancments.items()
+                    for enhancement_name, enhancement_col in enhancements.items()
                     if enhancement_name not in df.columns
                 ]
             )
-            new_pii = new_pii | set(enhancments.keys())
+            new_pii = new_pii | set(enhancements.keys())
     return df.select(*all_columns), new_pii

@@ -2,7 +2,7 @@ import pytest
 import os
 from pyspark.sql import SparkSession
 
-from carduus.keys import InMemoryKeyService
+from carduus.keys import SimpleKeyProvider
 
 
 @pytest.fixture(scope="session")
@@ -48,7 +48,7 @@ dccych5YFsjF+0vDJ1hul5+ZiAA+yFQWUj07/jR+CVKUJMWb5j11jjtmpiTPhmkt
 """,
     )
     ss.conf.set(
-        "carduus.token.publicKey.OrganizationB",
+        "carduus.token.publicKey.AcmeCorp",
         """-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnIST0H9sM2y0PUyMf5+F
 eCKn86xJzSkmjkP0Pe/N5tJfXl7ouRouwSqnOJGIFgEZfnU0pbIsT74hXvKnL8rL
@@ -64,13 +64,13 @@ fQIDAQAB
 
 
 @pytest.fixture(scope="session")
-def organization_b_key_service() -> InMemoryKeyService:
+def acme_key_provider() -> SimpleKeyProvider:
     # These encryption keys are left hardcoded so that we can use tests to ensure stability
     # of tokens across versions of the carduus project.
     # They should NEVER be used in production or any environment aside from the test suite
     # of the Carduus project or another OPPRL implementation.
-    return InMemoryKeyService(
-        private_key="""-----BEGIN PRIVATE KEY-----
+    return SimpleKeyProvider(
+        private_key=b"""-----BEGIN PRIVATE KEY-----
 MIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQCchJPQf2wzbLQ9
 TIx/n4V4IqfzrEnNKSaOQ/Q9783m0l9eXui5Gi7BKqc4kYgWARl+dTSlsixPviFe
 8qcvysuSf22LmosuhEi+ob2x8whNR8yM/vPmhlbGsUuj+dAFVGQcxBoWAD++mP4r
@@ -98,17 +98,6 @@ oY5DHaeA9U+0G90S59MTn3ueXGNnrBI2Pa6mwa1QaSzcDzk12WzXBo0fbM71pj9A
 Fyls61jQVEedIuRk7YtouCaLcZbDyCQJNgxiZpegRkkGwAlJMrhgJ6AT5NS3ChLI
 mI7fCXo7x0B5OWnSanc=
 -----END PRIVATE KEY-----
-""".encode(),
-        public_keys={
-            "OrganizationA": """-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5Z/guB5SzDi67u/PPG2x
-yH+4hunfrhe4nEy7Au8OFA/XZgyaU8JHX8vSwWg860qC5nJU3x4zehiKnmrhQ287
-CNjlpxc5qSZ7nQ/VtzXLJzVL6F6TsPIhFW1kiEHzwvU/QyAJdrpWNXYjDaeP17+I
-Y70/zLCqqyrSbF6F7ARuXpVJwVD+PSmZv2BW3slWGztVzDNMtVlzB3ZjENrvOg+E
-pPid5SYfKWrx8turdOlXTZ6JIeWJMpTmJZPHW32iiLB8FIHBkwkLK+SI+2Iq6mrY
-YicPA8maijY+Q+YA4Pi/jQcPyT0CBv1kZrmW/AQ2A9B/LyntStE+8gd/5xy6gxVf
-VwIDAQAB
------END PUBLIC KEY-----.
-""".encode(),
-        },
+""",
+        public_keys={},
     )

@@ -13,7 +13,7 @@ from carduus.token.pii import (
     DateTransform,
 )
 import carduus.token.crypto as crypto
-from carduus.keys import EncryptionKeyService, SparkConfKeyService
+from carduus.keys import EncryptionKeyProvider, SparkConfKeyProvider
 
 
 __all__ = [
@@ -23,7 +23,7 @@ __all__ = [
     "OpprlPii",
     "OpprlToken",
     "PiiTransform",
-    "TokenInfo",
+    "TokenSpec",
 ]
 
 
@@ -53,10 +53,10 @@ class OpprlPii(Enum):
 
 
 @dataclass(frozen=True)
-class TokenInfo:
-    """An ordered set of PII fields that will be encrypted together to create a token.
+class TokenSpec:
+    """An collection of PII fields that will be encrypted together to create a token.
 
-    For an enum of standard `TokenInfo` instances that comply with the Open Privacy Preserving Record Linkage specification
+    For an enum of standard `TokenSpec` instances that comply with the Open Privacy Preserving Record Linkage protocol
     see [`OpprlToken`][carduus.token.OpprlToken].
 
     Attributes:
@@ -67,22 +67,22 @@ class TokenInfo:
     """
 
     name: str
-    fields: tuple[str, ...]
+    fields: Iterable[str]
 
 
 class OpprlToken(Enum):
-    """Enum of [`TokenInfo`][carduus.token.TokenInfo] objects that meet the Open Privacy Preserving
+    """Enum of [`TokenSpec`][carduus.token.TokenSpec] objects that meet the Open Privacy Preserving
     Record Linkage tokenization specification.
 
     Attributes:
-        token1:
-            Standard Carduus token #1. Creates tokens based on `first_initial`, `last_name`, `gender`, and `birth_date`.
-        token2:
-            Standard Carduus token #2. Creates tokens based on `first_soundex`, `last_soundex`, `gender`, and `birth_date`.
+        opprl_token_1:
+            Standard OPPRL token #1. Creates tokens based on `first_initial`, `last_name`, `gender`, and `birth_date`.
+        opprl_token_2:
+            Standard OPPRL token #2. Creates tokens based on `first_soundex`, `last_soundex`, `gender`, and `birth_date`.
 
     """
 
-    token1: TokenInfo = TokenInfo(
+    token1: TokenSpec = TokenSpec(
         "opprl_token_1",
         (
             "first_initial",
@@ -92,7 +92,7 @@ class OpprlToken(Enum):
         ),
     )
 
-    token2: TokenInfo = TokenInfo(
+    token2: TokenSpec = TokenSpec(
         "opprl_token_2",
         (
             "first_soundex",
@@ -106,47 +106,47 @@ class OpprlToken(Enum):
 def tokenize(
     df: DataFrame,
     pii_transforms: dict[str, PiiTransform | OpprlPii],
-    tokens: Iterable[TokenInfo | OpprlToken],
-    key_service: EncryptionKeyService | None = None,
+    tokens: Iterable[TokenSpec | OpprlToken],
+    key_provider: EncryptionKeyProvider | None = None,
 ) -> DataFrame:
     """Replaces all PII attributes with encrypted tokens.
 
     All PII columns found in the `DataFrame` are normalized using the provided `pii_transforms`.
     All PII attributes provided by the enhancements of the `pii_transforms` are added if they
-    are not already present in the `DataFrame`. The fields of each [`TokenInfo`][carduus.token.TokenInfo]
+    are not already present in the `DataFrame`. The fields of each [`TokenSpec`][carduus.token.TokenSpec]
     from `tokens` are hashed and encrypted together according to the OPPRL specification. Finally,
     the PII columns are dropped.
 
     Arguments:
         df:
-            The pyspark `DataFrame` containing all PII attribures.
+            The pyspark `DataFrame` containing all PII attributes.
         pii_transforms:
             A dictionary that maps column names of `df` to [PiiTransform][carduus.token.PiiTransform]
             objects to specify how each raw PII column is normalized and enhanced into derived PII attributes.
             Values can also be a member of the [OpprlPii][carduus.token.OpprlPii] enum if using the
             standard OPPRL tokens.
         tokens:
-            A collection of [`TokenInfo`][carduus.token.TokenInfo] objects that denotes which PII attibutes
+            A collection of [`TokenSpec`][carduus.token.TokenSpec] objects that denotes which PII attributes
             are encrypted into each token. Elements can also be a member of the [OpprlToken][carduus.token.OpprlToken]
             enum if using the standard OPPRL tokens.
-        key_service:
-            An optional [`EncryptionKeyService`][carduus.keys.EncryptionKeyService] instance that serves your private
+        key_provider:
+            An optional [`EncryptionKeyProvider`][carduus.keys.EncryptionKeyProvider] instance that serves your private
             keys and the public keys of the parties you exchange data with. Default is an instance of
-            [`SparkConfKeyService`][carduus.keys.SparkConfKeyService] which looks for encryption keys loaded as
+            [`SparkConfKeyProvider`][carduus.keys.SparkConfKeyProvider] which looks for encryption keys loaded as
             spark configuration properties.
 
     Returns:
         The `DataFrame` with PII columns replaced by encrypted tokens.
 
     """
-    key_service = key_service or SparkConfKeyService()
+    key_provider = key_provider or SparkConfKeyProvider()
     pii_transforms_ = {
         c: tr.value if isinstance(tr, OpprlPii) else tr for c, tr in pii_transforms.items()
     }
     tokens_ = [t.value if isinstance(t, OpprlToken) else t for t in tokens]
     token_columns = [token.name for token in tokens_]
     encrypt = udf(
-        crypto.make_deterministic_encrypter(key_service.aes_key()), returnType=BinaryType()
+        crypto.make_deterministic_encrypter(key_provider.aes_key()), returnType=BinaryType()
     )
 
     pii = normalize_pii(df, pii_transforms_)
@@ -156,7 +156,7 @@ def tokenize(
     return (
         pii.withColumns(
             {
-                t.name: array_join(array(*[col(f) for f in t.fields]), delimiter=":")
+                t.name: array_join(array(*[col(f) for f in sorted(t.fields)]), delimiter=":")
                 for t in tokens_
             }
         ).withColumns(
@@ -173,38 +173,38 @@ def tokenize(
 def transcrypt_out(
     df: DataFrame,
     token_columns: Iterable[str],
-    destination: str,
-    key_service: EncryptionKeyService | None = None,
+    recipient: str,
+    key_provider: EncryptionKeyProvider | None = None,
 ) -> DataFrame:
     """Prepares a `DataFrame` containing encrypted tokens to be sent to a specific trusted party by re-encrypting
     the tokens using the recipient's public key without exposing the original PII.
 
-    Output tokens will be unmatchable to any dataset or within the given dataset until the intended receipient
-    processes the data with []`transcrypt_in`][carduus.token.transcrypt_in].
+    Output tokens will be unmatchable to any dataset or within the given dataset until the intended recipient
+    processes the data with [`transcrypt_in`][carduus.token.transcrypt_in].
 
     Arguments:
         df:
             Spark `DataFrame` with token columns to transcrypt.
         token_columns:
             The collection of column names that correspond to tokens.
-        destination:
-            The name of the destination that will be receiving transcrypted data. Used to lookup the appropriate
+        recipient:
+            The name of the recipient that will be receiving transcrypted data. Used to lookup the appropriate
             public keys for asymmetric encryption.
-        key_service:
-            An optional [`EncryptionKeyService`][carduus.keys.EncryptionKeyService] instance that serves your private
+        key_provider:
+            An optional [`EncryptionKeyProvider`][carduus.keys.EncryptionKeyProvider] instance that serves your private
             keys and the public keys of the parties you exchange data with. Default is an instance of
-            [`SparkConfKeyService`][carduus.keys.SparkConfKeyService] which looks for encryption keys loaded as
+            [`SparkConfKeyProvider`][carduus.keys.SparkConfKeyProvider] which looks for encryption keys loaded as
             spark configuration properties.
 
     Returns:
-        The `DataFrame` with the origional encrypted tokens re-encrypted for sending to the destination.
+        The `DataFrame` with the original encrypted tokens re-encrypted for sending to the recipient.
     """
-    key_service = key_service or SparkConfKeyService()
+    key_provider = key_provider or SparkConfKeyProvider()
     decrypt = udf(
-        crypto.make_deterministic_decrypter(key_service.aes_key()), returnType=BinaryType()
+        crypto.make_deterministic_decrypter(key_provider.aes_key()), returnType=BinaryType()
     )
     encrypt = udf(
-        crypto.make_asymmetric_encrypter(key_service.public_key_of(destination)),
+        crypto.make_asymmetric_encrypter(key_provider.public_key_of(recipient)),
         returnType=BinaryType(),
     )
     return df.withColumns(
@@ -218,7 +218,7 @@ def transcrypt_out(
 def transcrypt_in(
     df: DataFrame,
     token_columns: Iterable[str],
-    key_service: EncryptionKeyService | None = None,
+    key_provider: EncryptionKeyProvider | None = None,
 ) -> DataFrame:
     """Used by the recipient of a `DataFrame` containing tokens in the intermediate representation produced by
     [`transcrypt_out`][carduus.token.transcrypt_out] to re-encrypt the tokens such that they will match with
@@ -229,22 +229,22 @@ def transcrypt_in(
             Spark `DataFrame` with token columns to transcrypt.
         token_columns:
             The collection of column names that correspond to tokens.
-        key_service:
-            An optional [`EncryptionKeyService`][carduus.keys.EncryptionKeyService] instance that serves your private
+        key_provider:
+            An optional [`EncryptionKeyProvider`][carduus.keys.EncryptionKeyProvider] instance that serves your private
             keys and the public keys of the parties you exchange data with. Default is an instance of
-            [`SparkConfKeyService`][carduus.keys.SparkConfKeyService] which looks for encryption keys loaded as
+            [`SparkConfKeyProvider`][carduus.keys.SparkConfKeyProvider] which looks for encryption keys loaded as
             spark configuration properties.
 
     Returns:
-        The `DataFrame` with the origional encrypted tokens re-encrypted for sending to the destination.
+        The `DataFrame` with the original encrypted tokens re-encrypted for sending to the destination.
 
     """
-    key_service = key_service or SparkConfKeyService()
+    key_provider = key_provider or SparkConfKeyProvider()
     decrypt = udf(
-        crypto.make_asymmetric_decrypter(key_service.private_key()), returnType=BinaryType()
+        crypto.make_asymmetric_decrypter(key_provider.private_key()), returnType=BinaryType()
     )
     encrypt = udf(
-        crypto.make_deterministic_encrypter(key_service.aes_key()), returnType=BinaryType()
+        crypto.make_deterministic_encrypter(key_provider.aes_key()), returnType=BinaryType()
     )
     return df.withColumns(
         {

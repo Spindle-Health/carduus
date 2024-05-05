@@ -4,26 +4,29 @@ The open source implementation of the Open Privacy Preserving Record Linkage (OP
 
 ## Rationale
 
-Privacy Preserving Record Linkage (PPRL) systems are used to obfuscate identifying attributes or other sensitive information about the subjects described in the records of a dataset while still preserving the ability to link records pertaining to the same subject through the use of an encrypted token. This practice is sometimes referred to as "tokenization" and is one of the components of data deidenfication.
+Privacy Preserving Record Linkage (PPRL) is crucial component to data de-identification systems. PPRL obfuscate identifying attributes or other sensitive information about the subjects described in the records of a dataset while still preserving the ability to link records pertaining to the same subject through the use of an encrypted token. This practice is sometimes referred to as "tokenization" and is one of the components of data de-identification.
 
-The task of PPRL is to replace the attributes of a every record denoting Personally Identifiable Information (PII) with a token produced by a one-way cryptographic function. This prevents observers of the tokenized data from reversing the token into the sensitive PII attributes. The tokens are produced deterministically such that input records with the same, or similar, PII attributes will produce an identical token. This allows user of multiple tokenized data assets to associate records that are highly likely to belong to the same data subject without having acces to PII.
+The task of PPRL is to replace the attributes of a every record denoting Personally Identifiable Information (PII) with a token produced by a one-way cryptographic function. This prevents observers of the tokenized data from obtaining the PII. The tokens are produced deterministically such that input records with the same, or similar, PII attributes will produce an identical token. This allows practitioners to associate records across datasets that are highly likely to belong to the same data subject without having access to PII.
 
-Tokenization is also used when data is shared between organizations to limit the scope of damages in the event that one organization's data is compromised. Each party's tokens are created via encryption using a different secret key so that any compromised data asset is only matchable to other datasets mantained by the same party. During data sharing transactions, a specific "transcryption" data flow is used to re-encrpt the sender's tokens into tokens that match the receipient's data without recovering the underlying PII.
+Tokenization is also used when data is shared between organizations to limit, or in some cases fully mitigate, the risk of subject re-identification in the event that an untrusted third party gains access to a dataset containing sensitive data. Each party produced encrypted tokens using a different secret key so that any compromised data asset is, at worst, only matchable to other datasets maintained by the same party. During data sharing transactions, a specific "transcryption" data flow is used to first re-encrypt the sender's tokens into ephemeral tokens that do not match tokens in any other dataset and can only be ingested using the recipients secret key. At no point in the "transcryption" data flow is the original PII used.
 
-Carduus is the first (and canonical) implemenation of the Open Privacy Preserving Record Linkage (OPPRL) specification. This specification presents a standardized methodology for tokenization that can be implemented in any data system to increase interoperability. The carduus implementation is a python library that distributes the tokenization workload using apache [Spark](https://spark.apache.org/).
+Carduus is the first (and canonical) implementation of the [Open Privacy Preserving Record Linkage](https://spindle-health.github.io/carduus/opprl/) (OPPRL) protocol. This protocol presents a standardized methodology for tokenization that can be implemented in any data system to increase interoperability. The carduus implementation is a python library that distributes the tokenization workload using apache [Spark](https://spark.apache.org/) across multiple cores or multiple machines in a high performance computing cluster for efficient tokenization of any scale datasets.
 
 ## Getting Started
 
-> Warning: The first release `carduus` library has not yet been published to PyPi but can be installed from source.
+See the [getting started guide]() on the project's web page for an detailed explanation of how carduus is used including example code snippets.
 
-You can install the `carduus` library into your Python environment using `pip`
-
-```
-pip install carduus
-```
-
-See the full [API](https://spindle-health.github.io/carduus/api/) and the [example usage](https://spindle-health.github.io/carduus/databricks/) for further documentaiton.
+The full [API](https://spindle-health.github.io/carduus/api/) and an [example usage on Databricks](https://spindle-health.github.io/carduus/databricks/) are also provided on the project's web page.
 
 ## Contributing
 
-See `CONTRIBUTING.md` for a guide on how to contribute to Carduus.
+Please refer to the carduus [contributing guide](https://spindle-health.github.io/carduus/CONTRIBUTING/) for information on how to get started contributing to the project.
+
+### Organizations that have contributed to Carduus
+
+<a href="https://spindlehealth.com/">
+    <img src="https://spindlehealth.com/assets/img/wordmark_color_small.png"
+        alt="Spindle Health"
+        style="background-color: #F2F2F2; padding: 10px; height: 64px"
+    />
+</a>
