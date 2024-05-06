@@ -9,23 +9,25 @@
       
       
       
-        <link rel="prev" href="../CODE_OF_CONDUCT/">
+        <link rel="prev" href="../databricks/">
       
       
+        <link rel="next" href="../custom-pii/">
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.21">
     
     
       
-        <title>License - Carduus</title>
+        <title>Defining Token Specs - Carduus</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.66ac8b77.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.66ac8b77.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -44,9 +46,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -71,6 +73,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#defining-custom-token-specifications" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -83,7 +90,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Carduus" class="md-header__button md-logo" aria-label="Carduus" data-md-component="logo">
+    <a href="../.." title="Carduus" class="md-header__button md-logo" aria-label="Carduus" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -103,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              License
+              Defining Token Specs
             
           </span>
         </div>
@@ -204,7 +211,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Carduus" class="md-nav__button md-logo" aria-label="Carduus" data-md-component="logo">
+    <a href="../.." title="Carduus" class="md-nav__button md-logo" aria-label="Carduus" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -222,7 +229,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -242,7 +249,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../guides/getting-started/" class="md-nav__link">
+      <a href="../getting-started/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -262,7 +269,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/" class="md-nav__link">
+      <a href="../../api/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -279,17 +286,19 @@
       
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -303,7 +312,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Guides
@@ -317,7 +326,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../guides/custom-key-provider/" class="md-nav__link">
+      <a href="../custom-key-provider/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -338,7 +347,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../guides/databricks/" class="md-nav__link">
+      <a href="../databricks/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -356,10 +365,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../guides/custom-tokens/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -368,6 +386,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -380,7 +399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../guides/custom-pii/" class="md-nav__link">
+      <a href="../custom-pii/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -443,7 +462,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../opprl/" class="md-nav__link">
+      <a href="../../opprl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -464,7 +483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../opprl/PROTOCOL/" class="md-nav__link">
+      <a href="../../opprl/PROTOCOL/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -485,7 +504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../opprl/contrib/" class="md-nav__link">
+      <a href="../../opprl/contrib/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -510,19 +529,17 @@
       
   
   
-    
   
   
-  
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
@@ -536,7 +553,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Project
@@ -550,7 +567,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CONTRIBUTING/" class="md-nav__link">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -571,7 +588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CODE_OF_CONDUCT/" class="md-nav__link">
+      <a href="../../CODE_OF_CONDUCT/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -589,17 +606,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../LICENSE/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -608,7 +618,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -638,6 +647,8 @@
   
   
   
+    
+  
   
 </nav>
                   </div>
@@ -652,25 +663,15 @@
                   
 
 
-  <h1>License</h1>
+<h1 id="defining-custom-token-specifications">Defining Custom Token Specifications</h1>
+<p>In essence, a token is simply the concatenation of multiple PII fields into a single string of text which is passed through a hash and a subsequent cryptographic function. Carduus provides specifications of the tokens proposed in the OPPRL protocol. These tokens are known to have low false positive and false negative match rates for subjects whose PII is close to the distribution found in the United States population, while only relying on a minimal set of PII attributes that are commonly populated in real-world datasets.</p>
+<p>Some users may want to create tokens by concatenating different PII fields than what is proposed by OPPRL. This is often the case when the datasets of a particular user and the parties they share data with have additional PII beyond what OPPRL leverages that will lead to lower match errors for the sample of subjects used their use case. For a guide on how to extend Carduus with support for additional PII attributes, see <a href="../custom-pii/">this guide</a></p>
+<p>To declare a custom token specification, simply instantiate the <code>TokenSpec</code> class provided by Carduus and provide it with a token name and a collection of columns to jointly encrypt.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">carduus.token</span> <span class="kn">import</span> <span class="n">TokenSpec</span>
 
-<p>MIT License</p>
-<p>Copyright (c) 2024 Spindle Health LLC</p>
-<p>Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:</p>
-<p>The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.</p>
-<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.</p>
+<span class="n">my_token</span> <span class="o">=</span> <span class="n">TokenSpec</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;geo_token&quot;</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;last_name&quot;</span><span class="p">,</span> <span class="s2">&quot;birth_date&quot;</span><span class="p">,</span> <span class="s2">&quot;zipcode&quot;</span><span class="p">])</span>
+</code></pre></div>
+<p>This <code>my_token</code> object can be passed to the <code>tokenize</code> function to replace the PII columns with a <code>geo_token</code> column. If the PII data does not have one or more of the fields referenced by the token definition (after normalization and enhancement) the <code>tokenize</code> function will throw an exception prior to performing any significant workloads.</p>
 
 
 
@@ -717,10 +718,10 @@ SOFTWARE.</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.a7c05c9e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a7c05c9e.min.js"></script>
       
     
   </body>
