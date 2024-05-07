@@ -8,7 +8,7 @@ This guide provides a quick tour of the main features of Carduus, including inst
 
 Carduus is a cross-platform python library built on top of PySpark. It supports the following range of versions:
 
-- Python: 3.9+
+- Python: 3.10+
 - PySpark: 3.5+
 
 The latest stable release of carduus can be installed from [PyPI]() into your active Python environment using `pip`.
