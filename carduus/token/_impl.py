@@ -1,4 +1,4 @@
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 import jellyfish as j
 
 from pyspark.sql import Column
