@@ -76,9 +76,11 @@ class OpprlToken(Enum):
 
     Attributes:
         opprl_token_1:
-            Standard OPPRL token #1. Creates tokens based on `first_initial`, `last_name`, `gender`, and `birth_date`.
+            Token #1 from the OPPRL specification. Creates tokens based on `first_initial`, `last_name`, `gender`, and `birth_date`.
         opprl_token_2:
-            Standard OPPRL token #2. Creates tokens based on `first_soundex`, `last_soundex`, `gender`, and `birth_date`.
+            Token #2 from the OPPRL specification. Creates tokens based on `first_soundex`, `last_soundex`, `gender`, and `birth_date`.
+        orrpl_token_3:
+            Token #3 from the OPPRL specification. Creates tokens based on the `first_metaphone`, `last_metaphone`, `gender`, and `birth_date`.
 
     """
 
@@ -97,6 +99,16 @@ class OpprlToken(Enum):
         (
             "first_soundex",
             "last_soundex",
+            OpprlPii.gender.name,
+            OpprlPii.birth_date.name,
+        ),
+    )
+
+    token3: TokenSpec = TokenSpec(
+        "opprl_token_3",
+        (
+            "first_metaphone",
+            "last_metaphone",
             OpprlPii.gender.name,
             OpprlPii.birth_date.name,
         ),
