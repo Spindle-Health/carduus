@@ -1,0 +1,23 @@
+:root {
+    --md-primary-fg-color: #281826;
+    --md-accent-fg-color: #f6b412;
+
+    --spindle-blue: #78ABC4;
+    --spindle-pink: #A6529A;
+}
+
+a:not(.md-nav__link, .md-source, .md-header__button) {
+    color: var(--spindle-blue) !important
+}
+
+a:not(.md-nav__link, .md-source, .md-header__button):hover {
+    color: var(--md-accent-fg-color) !important;
+}
+
+a.md-logo {
+    color: var(--md-accent-fg-color)
+}
+
+th {
+    background-color: var(--spindle-pink);
+}
