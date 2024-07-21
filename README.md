@@ -1,5 +1,7 @@
 # Carduus
 
+[![PyPI version](https://badge.fury.io/py/carduus.svg)](https://badge.fury.io/py/carduus)
+
 The open source implementation of the Open Privacy Preserving Record Linkage (OPPRL) protocol build on Spark.
 
 ## Rationale
@@ -28,8 +30,8 @@ Please refer to the carduus [contributing guide](https://spindle-health.github.i
 ### Organizations that have contributed to Carduus
 
 <a href="https://spindlehealth.com/">
-    <img src="https://spindlehealth.com/assets/img/wordmark_color_small.png"
+    <img src="https://spindlehealth.com/wordmark_color_dark.png"
         alt="Spindle Health"
-        style="background-color: #F2F2F2; padding: 10px; height: 64px"
+        style="padding: 10px; height: 64px"
     />
 </a>
