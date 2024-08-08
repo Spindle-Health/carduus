@@ -59,20 +59,6 @@ The following two `enum` objects provide `PiiTransform` instances and `TokenSpec
 
 See the [encryption key section](./guides/getting-started.md#encryption-keys) of the "Getting started" guide for details about how Carduus accesses encryption keys.
 
-## ::: carduus.keys.SparkConfKeyProvider
-    handler: python
-    options:
-      members_order: source
-      show_root_heading: true
-      show_source: false
-
-## ::: carduus.keys.SimpleKeyProvider
-    handler: python
-    options:
-      members_order: source
-      show_root_heading: true
-      show_source: false
-
 ## ::: carduus.keys.generate_pem_keys
     handler: python
     options:
@@ -89,15 +75,6 @@ Carduus offers interfaces that can be extended by the user to add additional beh
 The `PiiTransform` abstract base class can be extended to add support for custom PII attributes, normalizations, and enhancements. See the [custom PII guide](./guides/custom-pii.md) for more details.
 
 ## ::: carduus.token.PiiTransform
-    handler: python
-    options:
-      members_order: source
-      show_root_heading: true
-      show_source: false
-
-The `EncryptionKeyProvider` abstract base class can be extended to delegate the retrieval of encryption keys to the preferred secret management service for your organization.
-
-## ::: carduus.keys.EncryptionKeyProvider
     handler: python
     options:
       members_order: source
