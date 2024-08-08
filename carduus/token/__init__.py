@@ -180,8 +180,8 @@ def tokenize(
 def transcrypt_out(
     df: DataFrame,
     token_columns: Iterable[str],
-    private_key: bytes,
     recipient_public_key: bytes,
+    private_key: bytes,
 ) -> DataFrame:
     """Prepares a `DataFrame` containing encrypted tokens to be sent to a specific trusted party by re-encrypting
     the tokens using the recipient's public key without exposing the original PII.

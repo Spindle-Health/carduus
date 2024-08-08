@@ -4,7 +4,6 @@ nav:
   - Getting Started: guides/getting-started.md
   - API: api.md
   - Guides:
-    - Custom Key Provider: guides/custom-key-provider.md
     - Carduus on Databricks: guides/databricks.ipynb
     - Defining Token Specs: guides/custom-tokens.md
     - Using Custom PII: guides/custom-pii.md

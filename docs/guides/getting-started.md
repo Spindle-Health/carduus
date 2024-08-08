@@ -53,45 +53,6 @@ print(public.decode())
 # -----END PUBLIC KEY-----
 ```
 
-### Providing Keys to Carduus
-
-Carduus has multiple ways of for users to provide their encryption keys.
-
-The default option is to load encryption keys as Spark session configuration properties. This behavior is designed to integrate with secret management services that inject secrets into the Spark session properties, such as the [Databricks secret manager](https://docs.databricks.com/en/security/secrets/secrets.html#use-a-secret-in-a-spark-configuration-property-or-environment-variable). For more information on using Carduus on Databricks, see the [Databricks usage guide](./databricks.ipynb).
-
-Your private key is stored under the `carduus.token.privateKey` property. The public keys of each party you send data to is stored under a property with the prefix `carduus.token.publicKey.` followed by the name you would like to associate with the party. For example, the public key for _Acme Corp_ would be stored under the `carduus.token.publicKey.AcmeCorp` property.
-
-These properties can be set when starting the spark cluster, or at runtime using the `SparkSession` method `.conf.set()` as shown below.
-
-> :warning: The following snippet is only a demonstration. You should never hard-code your private encryption keys.
-> Instead you should call out to a dedicated secret management service that ensure only authorized users are accessing the key.
-
-```python
-# Get a reference to the active spark session or create one with SparkSession.builder.getOrCreate()
-spark: SparkSession = ... 
-
-spark.conf.set(
-  "carduus.token.privateKey,
-  """-----BEGIN PRIVATE KEY-----
-... [ Base64-encoded private key ] ...
------END PRIVATE KEY-----
-"""
-)
-
-spark.conf.set(
-  "carduus.token.publicKey.AcmeCorp",
-  """-----BEGIN PUBLIC KEY-----
-... [ Base64-encoded public key ] ...
------END PUBLIC KEY-----
-""",
-)
-
-```
-
-Carduus also provides an [`SimpleKeyProvider`](../api.md#encryption-key-management) class that simply holds an in-memory collection of keys as instances of `bytes`.This allows users to manage all encryption keys using whatever method they way and 
-
-Some users may way a more tightly coupled integration between Carduus and their preferred system for managing secrets and encryption keys. For example, you may wish for Carduus to delegate to your authentication or access control services before giving Carduus, and the user, access to certain keys. To solve this problem, Carduus accepts any implementation of the [`EncryptionKeyProvider`](../api.md#encryption-key-management) interface. See the [custom key provider](./custom-key-provider.md) guide for more details.
-
 ## Tokenization
 
 Tokenization refers to the process of replacing PII with encrypted tokens using a one-way cryptographic function. Carduus implements the OPPRL tokenization protocol, which performs a standard set of PII normalizations and enhancements such that records pertaining to the same subject are more likely to receive the same token despite minor differences in PII representation across records. The OPPRL protocol hashes the normalized PII and then encrypts the hashes with a symmetric encryption based on a secret key derived from your private RSA key. In the event that the private encryption key of one party is compromised, there risk to all other parties is mitigated by the fact that everyone's tokens are encrypted with a different key.
@@ -134,6 +95,7 @@ tokens = tokenize(
         birth_date=OpprlPii.birth_date,
     ),
     tokens=[OpprlToken.token1, OpprlToken.token2],
+    private_key=b"""-----BEGIN PRIVATE KEY----- ...""",
 )
 # +-----+--------------------+--------------------+
 # |label|       opprl_token_1|       opprl_token_2|
@@ -150,16 +112,17 @@ Notice that both records with `label = 1` received the same pair of tokens despi
 
 The `pii_transforms` argument is a dictionary that maps column names from the `pii` DataFrame to the corresponding OPPRL PII field. This tells Carduus how to normalize and enhance the values found in that column. For example, the `OpprlPii.first_name` object will apply name cleaning rules to the values found in the `first_name` column and automatically derive additional PII columns called `first_initial` and `first_soundex` which are used to create both OPPRL tokens.
 
-The `tokens` argument is collection of OPPRL token specifications that tell Carduus which PII fields to jointly hash and encrypt to create each token. The current OPPRL protocol supports two token specifications, described below:
+The `tokens` argument is collection of OPPRL token specifications that tell Carduus which PII fields to jointly hash and encrypt to create each token. The current OPPRL protocol supports three token specifications, described below:
 
 | Token | Fields to jointly encrypt |
 |-|-|
 | `OpprlToken.token1` | `first_initial`, `last_name`, `gender`, `birth_date` |
 | `OpprlToken.token2` | `first_soundex`, `last_soundex`, `gender`, `birth_date` |
+| `OpprlToken.token3` | `first_metaphone`, `last_metaphone`, `gender`, `birth_date` |
 
-> :bulb: **Why two tokens?** 
+> :bulb: **Why multiple tokens?** 
 >
-> Each use case has a different tolerance for false positive and false negative matches. By producing multiple tokens for each record using PII attributes, each user can customize their match logic to trade-off between different kinds of match errors. Linking records that match on _either_ token will result in fewer false negatives, and linking records that match _both_ tokens will result in fewer false positives.
+> Each use case has a different tolerance for false positive and false negative matches. By producing multiple tokens for each record using PII attributes, each user can customize their match logic to trade-off between different kinds of match errors. Linking records that match on _any_ token will result in fewer false negatives, and linking records that match _all_ tokens will result in fewer false positives. User can design their own match strategies by using subsets of tokens.
 
 ## Transcryption
 
@@ -178,12 +141,15 @@ Carduus provides the `transcrypt_out` function in for the sender to call on thei
 ```python
 tokens_to_send = transcrypt_out(
     tokens, 
-    token_columns=("opprl_token_1", "opprl_token_2"), 
-    recipient="AcmeCorp",
+    token_columns=("opprl_token_1", "opprl_token_3"), 
+    recipient_public_key=b"""-----BEGIN PUBLIC KEY----- ...""".
+    # THis is the private key of the sender
+    # It is NOT the private key associated with the recipient_public_key.
+    private_key=b"""-----BEGIN PRIVATE KEY----- ...""",
 )
 tokens.to_send.show()
 # +-----+--------------------+--------------------+
-# |label|       opprl_token_1|       opprl_token_2|
+# |label|       opprl_token_1|       opprl_token_3|
 # +-----+--------------------+--------------------+
 # |    1|IL17HgISJv5ol+ftJ...|YPnfuGBBhbOZChlhR...|
 # |    1|IVwfYY0dbmFc6cf0/...|jF8N2HYEYPr5lFSSx...|
@@ -201,31 +167,21 @@ The `recipient` argument denotes the name given to the public key associated wit
 
 The `transcrypt_in` function provides the transcryption process for the recipient. It is called on a dataset produced by the sender using `transcrypt_out` to convert ephemeral tokens into normal tokens that will match other tokenized datasets maintained by the recipient, including prior datasets delivered from the same sender.
 
-For this demonstration, we will load the private encryption key of our hypothetical recipient, Acme Corp, in order to process the ephemeral tokens we created in the previous section as if we were operating in the recipient's environment. This is done using an `SimpleKeyProvider` that is passed to the transcryption function to override where Carduus pull keys from.
-
 Notice that the first 2 records pertaining to the same subject (label = 1) have identical tokens again, but do these tokens are not the same as the original tokens because they are encrypted with the scheme for the recipient.
 
 ```python
-from carduus.keys import SimpleKeyProvider
 from carduus.token import transcrypt_in
 
-acme_keys = SimpleKeyProvider(
-  # Another reminder to never hardcode your private encryption keys in real use cases!
-  private_key=b"""-----BEGIN PRIVATE KEY-----
-... [ Base64-encoded private key ] ...
------END PRIVATE KEY-----
-""",
-  public_keys={},
-)
-
-acme_tokens = transcrypt_in(
+tokens_received = transcrypt_in(
     tokens_to_send, 
-    token_columns=("opprl_token_1", "opprl_token_2"),
-    key_service=acme_keys,
+    token_columns=("opprl_token_1", "opprl_token_3"),
+    # This is the private key corresponding to the public key used to the prepare the data.
+    # It is NOT the private key used to tokenize the PII.
+    private_key=b"""-----BEGIN PRIVATE KEY----- ...""",
 )
-acme_tokens.show()
+tokens_received.show()
 # +-----+--------------------+--------------------+
-# |label|       opprl_token_1|       opprl_token_2|
+# |label|       opprl_token_1|       opprl_token_3|
 # +-----+--------------------+--------------------+
 # |    1|O47siK/9rItAv6lwa...|uoPojmvjl3Mk734Ul...|
 # |    1|O47siK/9rItAv6lwa...|uoPojmvjl3Mk734Ul...|
@@ -253,7 +209,6 @@ For more information about different modes of deployment, see the official Spark
 
 - Reference the full [API](../api.md)
 - Learn more about using Carduus and extending it's functionality from the advanced user guides:
-    - [Implementing a custom encryption key provider](./custom-key-provider.md)
     - [Using Carduus on Databricks](./databricks.ipynb)
     - [Defining custom token specifications](./custom-tokens.md)
     - [Adding support for custom PII attributes](./custom-pii.md)

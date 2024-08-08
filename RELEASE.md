@@ -20,7 +20,7 @@ This is a guide for how to publish a new release of `carduus` including all step
 
     If any changes are needed to the Databricks guide notebook, author them in Databricks, export as IPython notebook, and replace the guide in the repo.
 
-1. Build the documentation site (with API docs) and check for build errors. Explore the doc site locally for any issues.
+1. Build the documentation site (with API docs) and check for build errors. Explore the doc site locally for any issues, including code changes needed in the getting started guide.
 
     ```
     poetry run mkdocs build

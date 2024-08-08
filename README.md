@@ -14,8 +14,7 @@ Tokenization is also used when data is shared between organizations to limit, or
 
 Carduus is the first (and canonical) implementation of the [Open Privacy Preserving Record Linkage](https://spindle-health.github.io/carduus/opprl/) (OPPRL) protocol. This protocol presents a standardized methodology for tokenization that can be implemented in any data system to increase interoperability. The carduus implementation is a python library that distributes the tokenization workload using apache [Spark](https://spark.apache.org/) across multiple cores or multiple machines in a high performance computing cluster for efficient tokenization of any scale datasets.
 
-**Why the name "Carduus"?** The [Carduus](https://en.wikipedia.org/wiki/Carduus) is a genus of thistle plants that was used to brush fibrous materials so that individual fibres align in preparation for spinning the material into thread or yarn. Today this process is known as "Carding" and is done by specialized machines.
-
+**Why the name "Carduus"?** The [carduus](https://en.wikipedia.org/wiki/Carduus) is a genus of thistle plants that was used to brush fibrous materials so that individual fibres align in preparation for spinning the material into thread or yarn. Today this process is known as "carding" and is done by specialized machines.
 
 ## Getting Started
 
