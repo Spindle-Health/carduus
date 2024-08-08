@@ -2,22 +2,24 @@ import pytest
 import os
 from pyspark.sql import SparkSession
 
-from carduus.keys import SimpleKeyProvider
-
 
 @pytest.fixture(scope="session")
 def spark() -> SparkSession:
     # For PyArrow 2.0.0 and above, PYARROW_IGNORE_TIMEZONE environment variable must be set
     # to 1 (on the driver and executors).
     os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
-    ss = SparkSession.builder.appName("Carduus Tests").getOrCreate()
-    # These encryption keys are left hardcoded so that we can use tests to ensure stability
-    # of tokens across versions of the carduus project.
-    # They should NEVER be used in production or any environment aside from the test suite
-    # of the Carduus project or another OPPRL implementation.
-    ss.conf.set(
-        "carduus.token.privateKey",
-        """-----BEGIN PRIVATE KEY-----
+    return SparkSession.builder.appName("Carduus Tests").getOrCreate()
+
+
+# These encryption keys are left hardcoded so that we can use tests to ensure stability
+# of tokens across versions of the carduus project.
+# They should NEVER be used in production or any environment aside from the test suite
+# of the Carduus project or another OPPRL implementation.
+
+
+@pytest.fixture(scope="session")
+def private_key() -> bytes:
+    return b"""-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDln+C4HlLMOLru
 7888bbHIf7iG6d+uF7icTLsC7w4UD9dmDJpTwkdfy9LBaDzrSoLmclTfHjN6GIqe
 auFDbzsI2OWnFzmpJnudD9W3NcsnNUvoXpOw8iEVbWSIQfPC9T9DIAl2ulY1diMN
@@ -45,11 +47,12 @@ OLnIFEMaDperCdgWv1S8gGvGnh2bDKyccUW2BTO8BqMB47YkYXUvvH2kOGt5MmxK
 dccych5YFsjF+0vDJ1hul5+ZiAA+yFQWUj07/jR+CVKUJMWb5j11jjtmpiTPhmkt
 0HVXZ+f7Z8lmid8Fp/q6XVs=
 -----END PRIVATE KEY-----
-""",
-    )
-    ss.conf.set(
-        "carduus.token.publicKey.AcmeCorp",
-        """-----BEGIN PUBLIC KEY-----
+"""
+
+
+@pytest.fixture(scope="session")
+def acme_public_key() -> bytes:
+    return b"""-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnIST0H9sM2y0PUyMf5+F
 eCKn86xJzSkmjkP0Pe/N5tJfXl7ouRouwSqnOJGIFgEZfnU0pbIsT74hXvKnL8rL
 kn9ti5qLLoRIvqG9sfMITUfMjP7z5oZWxrFLo/nQBVRkHMQaFgA/vpj+K79p2fky
@@ -58,19 +61,12 @@ FBtaQp4TtaR4ZW+qlNfJemr5B3VIxnSPmbKQARPtLnQC2HMYOlBQR1jd8kEV1wAQ
 uvz2/aNpCh8fA3FNZ3Q6Y8eaGH++vgrERvNqvkugI1MGq6AEOmMwFleautdNahv2
 fQIDAQAB
 -----END PUBLIC KEY-----
-""",
-    )
-    return ss
+"""
 
 
 @pytest.fixture(scope="session")
-def acme_key_provider() -> SimpleKeyProvider:
-    # These encryption keys are left hardcoded so that we can use tests to ensure stability
-    # of tokens across versions of the carduus project.
-    # They should NEVER be used in production or any environment aside from the test suite
-    # of the Carduus project or another OPPRL implementation.
-    return SimpleKeyProvider(
-        private_key=b"""-----BEGIN PRIVATE KEY-----
+def acme_private_key() -> bytes:
+    return b"""-----BEGIN PRIVATE KEY-----
 MIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQCchJPQf2wzbLQ9
 TIx/n4V4IqfzrEnNKSaOQ/Q9783m0l9eXui5Gi7BKqc4kYgWARl+dTSlsixPviFe
 8qcvysuSf22LmosuhEi+ob2x8whNR8yM/vPmhlbGsUuj+dAFVGQcxBoWAD++mP4r
@@ -98,6 +94,4 @@ oY5DHaeA9U+0G90S59MTn3ueXGNnrBI2Pa6mwa1QaSzcDzk12WzXBo0fbM71pj9A
 Fyls61jQVEedIuRk7YtouCaLcZbDyCQJNgxiZpegRkkGwAlJMrhgJ6AT5NS3ChLI
 mI7fCXo7x0B5OWnSanc=
 -----END PRIVATE KEY-----
-""",
-        public_keys={},
-    )
+"""
