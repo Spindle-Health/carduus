@@ -368,15 +368,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#providing-keys-to-carduus" class="md-nav__link">
-    <span class="md-ellipsis">
-      Providing Keys to Carduus
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -504,27 +495,6 @@
             Guides
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../custom-key-provider/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Custom Key Provider
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -860,15 +830,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#providing-keys-to-carduus" class="md-nav__link">
-    <span class="md-ellipsis">
-      Providing Keys to Carduus
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -993,36 +954,6 @@
 <span class="c1"># ... [ Base64-encoded public key ] ...</span>
 <span class="c1"># -----END PUBLIC KEY-----</span>
 </code></pre></div>
-<h3 id="providing-keys-to-carduus">Providing Keys to Carduus</h3>
-<p>Carduus has multiple ways of for users to provide their encryption keys.</p>
-<p>The default option is to load encryption keys as Spark session configuration properties. This behavior is designed to integrate with secret management services that inject secrets into the Spark session properties, such as the <a href="https://docs.databricks.com/en/security/secrets/secrets.html#use-a-secret-in-a-spark-configuration-property-or-environment-variable">Databricks secret manager</a>. For more information on using Carduus on Databricks, see the <a href="../databricks/">Databricks usage guide</a>.</p>
-<p>Your private key is stored under the <code>carduus.token.privateKey</code> property. The public keys of each party you send data to is stored under a property with the prefix <code>carduus.token.publicKey.</code> followed by the name you would like to associate with the party. For example, the public key for <em>Acme Corp</em> would be stored under the <code>carduus.token.publicKey.AcmeCorp</code> property.</p>
-<p>These properties can be set when starting the spark cluster, or at runtime using the <code>SparkSession</code> method <code>.conf.set()</code> as shown below.</p>
-<blockquote>
-<p><img alt="⚠" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/26a0.svg" title=":warning:" /> The following snippet is only a demonstration. You should never hard-code your private encryption keys.
-Instead you should call out to a dedicated secret management service that ensure only authorized users are accessing the key.</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="c1"># Get a reference to the active spark session or create one with SparkSession.builder.getOrCreate()</span>
-<span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span> <span class="o">=</span> <span class="o">...</span> 
-
-<span class="n">spark</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
-  <span class="s2">&quot;carduus.token.privateKey,</span>
-<span class="w">  </span><span class="sd">&quot;&quot;&quot;-----BEGIN PRIVATE KEY-----</span>
-<span class="sd">... [ Base64-encoded private key ] ...</span>
-<span class="sd">-----END PRIVATE KEY-----</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="p">)</span>
-
-<span class="n">spark</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
-  <span class="s2">&quot;carduus.token.publicKey.AcmeCorp&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="sd">&quot;&quot;&quot;-----BEGIN PUBLIC KEY-----</span>
-<span class="sd">... [ Base64-encoded public key ] ...</span>
-<span class="sd">-----END PUBLIC KEY-----</span>
-<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Carduus also provides an <a href="../../api/#encryption-key-management"><code>SimpleKeyProvider</code></a> class that simply holds an in-memory collection of keys as instances of <code>bytes</code>.This allows users to manage all encryption keys using whatever method they way and </p>
-<p>Some users may way a more tightly coupled integration between Carduus and their preferred system for managing secrets and encryption keys. For example, you may wish for Carduus to delegate to your authentication or access control services before giving Carduus, and the user, access to certain keys. To solve this problem, Carduus accepts any implementation of the <a href="../../api/#encryption-key-management"><code>EncryptionKeyProvider</code></a> interface. See the <a href="../custom-key-provider/">custom key provider</a> guide for more details.</p>
 <h2 id="tokenization">Tokenization</h2>
 <p>Tokenization refers to the process of replacing PII with encrypted tokens using a one-way cryptographic function. Carduus implements the OPPRL tokenization protocol, which performs a standard set of PII normalizations and enhancements such that records pertaining to the same subject are more likely to receive the same token despite minor differences in PII representation across records. The OPPRL protocol hashes the normalized PII and then encrypts the hashes with a symmetric encryption based on a secret key derived from your private RSA key. In the event that the private encryption key of one party is compromised, there risk to all other parties is mitigated by the fact that everyone's tokens are encrypted with a different key.</p>
 <p>To demonstrate the tokenization process, we will use a dataset of 5 records shown below. Each record is assigned a <code>label</code> that corresponds to the true identity of the subject.</p>
@@ -1058,6 +989,7 @@ Instead you should call out to a dedicated secret management service that ensure
         <span class="n">birth_date</span><span class="o">=</span><span class="n">OpprlPii</span><span class="o">.</span><span class="n">birth_date</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">tokens</span><span class="o">=</span><span class="p">[</span><span class="n">OpprlToken</span><span class="o">.</span><span class="n">token1</span><span class="p">,</span> <span class="n">OpprlToken</span><span class="o">.</span><span class="n">token2</span><span class="p">],</span>
+    <span class="n">private_key</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;&quot;-----BEGIN PRIVATE KEY----- ...&quot;&quot;&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># +-----+--------------------+--------------------+</span>
 <span class="c1"># |label|       opprl_token_1|       opprl_token_2|</span>
@@ -1071,7 +1003,7 @@ Instead you should call out to a dedicated secret management service that ensure
 </code></pre></div>
 <p>Notice that both records with <code>label = 1</code> received the same pair of tokens despite slight representation differences in the original PII.</p>
 <p>The <code>pii_transforms</code> argument is a dictionary that maps column names from the <code>pii</code> DataFrame to the corresponding OPPRL PII field. This tells Carduus how to normalize and enhance the values found in that column. For example, the <code>OpprlPii.first_name</code> object will apply name cleaning rules to the values found in the <code>first_name</code> column and automatically derive additional PII columns called <code>first_initial</code> and <code>first_soundex</code> which are used to create both OPPRL tokens.</p>
-<p>The <code>tokens</code> argument is collection of OPPRL token specifications that tell Carduus which PII fields to jointly hash and encrypt to create each token. The current OPPRL protocol supports two token specifications, described below:</p>
+<p>The <code>tokens</code> argument is collection of OPPRL token specifications that tell Carduus which PII fields to jointly hash and encrypt to create each token. The current OPPRL protocol supports three token specifications, described below:</p>
 <table>
 <thead>
 <tr>
@@ -1088,11 +1020,15 @@ Instead you should call out to a dedicated secret management service that ensure
 <td><code>OpprlToken.token2</code></td>
 <td><code>first_soundex</code>, <code>last_soundex</code>, <code>gender</code>, <code>birth_date</code></td>
 </tr>
+<tr>
+<td><code>OpprlToken.token3</code></td>
+<td><code>first_metaphone</code>, <code>last_metaphone</code>, <code>gender</code>, <code>birth_date</code></td>
+</tr>
 </tbody>
 </table>
 <blockquote>
-<p><img alt="💡" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f4a1.svg" title=":bulb:" /> <strong>Why two tokens?</strong> </p>
-<p>Each use case has a different tolerance for false positive and false negative matches. By producing multiple tokens for each record using PII attributes, each user can customize their match logic to trade-off between different kinds of match errors. Linking records that match on <em>either</em> token will result in fewer false negatives, and linking records that match <em>both</em> tokens will result in fewer false positives.</p>
+<p><img alt="💡" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f4a1.svg" title=":bulb:" /> <strong>Why multiple tokens?</strong> </p>
+<p>Each use case has a different tolerance for false positive and false negative matches. By producing multiple tokens for each record using PII attributes, each user can customize their match logic to trade-off between different kinds of match errors. Linking records that match on <em>any</em> token will result in fewer false negatives, and linking records that match <em>all</em> tokens will result in fewer false positives. User can design their own match strategies by using subsets of tokens.</p>
 </blockquote>
 <h2 id="transcryption">Transcryption</h2>
 <blockquote>
@@ -1105,12 +1041,15 @@ Instead you should call out to a dedicated secret management service that ensure
 <p>Carduus provides the <code>transcrypt_out</code> function in for the sender to call on their tokenized datasets. In the following code snippet, notice the 2 records pertaining to the same subject (<code>label = 1</code>) no longer have identical tokens. The <code>tokens_to_send</code> DataFrame can safely be written files or a database and delivered to the recipient.</p>
 <div class="highlight"><pre><span></span><code><span class="n">tokens_to_send</span> <span class="o">=</span> <span class="n">transcrypt_out</span><span class="p">(</span>
     <span class="n">tokens</span><span class="p">,</span> 
-    <span class="n">token_columns</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;opprl_token_1&quot;</span><span class="p">,</span> <span class="s2">&quot;opprl_token_2&quot;</span><span class="p">),</span> 
-    <span class="n">recipient</span><span class="o">=</span><span class="s2">&quot;AcmeCorp&quot;</span><span class="p">,</span>
+    <span class="n">token_columns</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;opprl_token_1&quot;</span><span class="p">,</span> <span class="s2">&quot;opprl_token_3&quot;</span><span class="p">),</span> 
+    <span class="n">recipient_public_key</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;&quot;-----BEGIN PUBLIC KEY----- ...&quot;&quot;&quot;</span><span class="o">.</span>
+    <span class="c1"># THis is the private key of the sender</span>
+    <span class="c1"># It is NOT the private key associated with the recipient_public_key.</span>
+    <span class="n">private_key</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;&quot;-----BEGIN PRIVATE KEY----- ...&quot;&quot;&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">tokens</span><span class="o">.</span><span class="n">to_send</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="c1"># +-----+--------------------+--------------------+</span>
-<span class="c1"># |label|       opprl_token_1|       opprl_token_2|</span>
+<span class="c1"># |label|       opprl_token_1|       opprl_token_3|</span>
 <span class="c1"># +-----+--------------------+--------------------+</span>
 <span class="c1"># |    1|IL17HgISJv5ol+ftJ...|YPnfuGBBhbOZChlhR...|</span>
 <span class="c1"># |    1|IVwfYY0dbmFc6cf0/...|jF8N2HYEYPr5lFSSx...|</span>
@@ -1123,28 +1062,19 @@ Instead you should call out to a dedicated secret management service that ensure
 <p>The <code>recipient</code> argument denotes the name given to the public key associated with the intended recipient. If using the default encryption key provider (via Spark session properties) the above code snippet will grab the public key from <code>carduus.token.publicKey.AcmeCorp</code> spark session property.</p>
 <h3 id="recipient">Recipient</h3>
 <p>The <code>transcrypt_in</code> function provides the transcryption process for the recipient. It is called on a dataset produced by the sender using <code>transcrypt_out</code> to convert ephemeral tokens into normal tokens that will match other tokenized datasets maintained by the recipient, including prior datasets delivered from the same sender.</p>
-<p>For this demonstration, we will load the private encryption key of our hypothetical recipient, Acme Corp, in order to process the ephemeral tokens we created in the previous section as if we were operating in the recipient's environment. This is done using an <code>SimpleKeyProvider</code> that is passed to the transcryption function to override where Carduus pull keys from.</p>
 <p>Notice that the first 2 records pertaining to the same subject (label = 1) have identical tokens again, but do these tokens are not the same as the original tokens because they are encrypted with the scheme for the recipient.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">carduus.keys</span> <span class="kn">import</span> <span class="n">SimpleKeyProvider</span>
-<span class="kn">from</span> <span class="nn">carduus.token</span> <span class="kn">import</span> <span class="n">transcrypt_in</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">carduus.token</span> <span class="kn">import</span> <span class="n">transcrypt_in</span>
 
-<span class="n">acme_keys</span> <span class="o">=</span> <span class="n">SimpleKeyProvider</span><span class="p">(</span>
-  <span class="c1"># Another reminder to never hardcode your private encryption keys in real use cases!</span>
-  <span class="n">private_key</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;&quot;-----BEGIN PRIVATE KEY-----</span>
-<span class="s2">... [ Base64-encoded private key ] ...</span>
-<span class="s2">-----END PRIVATE KEY-----</span>
-<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
-  <span class="n">public_keys</span><span class="o">=</span><span class="p">{},</span>
-<span class="p">)</span>
-
-<span class="n">acme_tokens</span> <span class="o">=</span> <span class="n">transcrypt_in</span><span class="p">(</span>
+<span class="n">tokens_received</span> <span class="o">=</span> <span class="n">transcrypt_in</span><span class="p">(</span>
     <span class="n">tokens_to_send</span><span class="p">,</span> 
-    <span class="n">token_columns</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;opprl_token_1&quot;</span><span class="p">,</span> <span class="s2">&quot;opprl_token_2&quot;</span><span class="p">),</span>
-    <span class="n">key_service</span><span class="o">=</span><span class="n">acme_keys</span><span class="p">,</span>
+    <span class="n">token_columns</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;opprl_token_1&quot;</span><span class="p">,</span> <span class="s2">&quot;opprl_token_3&quot;</span><span class="p">),</span>
+    <span class="c1"># This is the private key corresponding to the public key used to the prepare the data.</span>
+    <span class="c1"># It is NOT the private key used to tokenize the PII.</span>
+    <span class="n">private_key</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;&quot;-----BEGIN PRIVATE KEY----- ...&quot;&quot;&quot;</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">acme_tokens</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">tokens_received</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="c1"># +-----+--------------------+--------------------+</span>
-<span class="c1"># |label|       opprl_token_1|       opprl_token_2|</span>
+<span class="c1"># |label|       opprl_token_1|       opprl_token_3|</span>
 <span class="c1"># +-----+--------------------+--------------------+</span>
 <span class="c1"># |    1|O47siK/9rItAv6lwa...|uoPojmvjl3Mk734Ul...|</span>
 <span class="c1"># |    1|O47siK/9rItAv6lwa...|uoPojmvjl3Mk734Ul...|</span>
@@ -1167,7 +1097,6 @@ Instead you should call out to a dedicated secret management service that ensure
 <ul>
 <li>Reference the full <a href="../../api/">API</a></li>
 <li>Learn more about using Carduus and extending it's functionality from the advanced user guides:<ul>
-<li><a href="../custom-key-provider/">Implementing a custom encryption key provider</a></li>
 <li><a href="../databricks/">Using Carduus on Databricks</a></li>
 <li><a href="../custom-tokens/">Defining custom token specifications</a></li>
 <li><a href="../custom-pii/">Adding support for custom PII attributes</a></li>
