@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "carduus"
-version = "0.1.2"
+version = "0.2.0"
 description = "PySpark implementation of the Open Privacy Preserving Record Linkage protocol."
 authors = ["Eddie Pantridge <eddie@spindlehealth.com>"]
 readme = "README.md"
@@ -20,10 +20,11 @@ numpy = "<2.0"
 coverage = "^7.4"
 black = "^24.4"
 mypy = "^0.991"
-mkdocs = "^1.5"
-mkdocs-material = "^9.5"
-mkdocstrings = { version = "^0.24", extras = ["python"] }
-mkdocs-jupyter = "^0.24"
+mkdocs = ">=1.6"
+mkdocs-material = ">=9.6"
+mkdocstrings = ">=0.28"
+mkdocstrings-python = ">=1.14.6"
+mkdocs-jupyter = ">=0.25.1"
 
 [build-system]
 requires = ["poetry-core"]

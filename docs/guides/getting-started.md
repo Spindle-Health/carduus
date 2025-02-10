@@ -143,7 +143,7 @@ tokens_to_send = transcrypt_out(
     tokens, 
     token_columns=("opprl_token_1", "opprl_token_3"), 
     recipient_public_key=b"""-----BEGIN PUBLIC KEY----- ...""".
-    # THis is the private key of the sender
+    # This is the private key of the sender
     # It is NOT the private key associated with the recipient_public_key.
     private_key=b"""-----BEGIN PRIVATE KEY----- ...""",
 )
@@ -192,8 +192,6 @@ tokens_received.show()
 ```
 
 As with `transcrypt_out`, the `token_columns` argument is a iterable collection containing the column names of the `tokens` DataFrame that correspond to tokens that need to be transcrypted. 
-
-The `key_service` argument overrides the default key provider with our Acme Corp keys. The `tokenize` and `transcrypt_out` functions also have this parameter.
 
 ## Deployment
 
