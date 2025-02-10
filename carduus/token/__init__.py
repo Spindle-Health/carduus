@@ -151,6 +151,8 @@ def tokenize(
         c: tr.value if isinstance(tr, OpprlPii) else tr for c, tr in pii_transforms.items()
     }
     tokens_ = [t.value if isinstance(t, OpprlToken) else t for t in tokens]
+    if len(tokens) == 0:
+        return df
     token_columns = [token.name for token in tokens_]
     encrypt = udf(
         crypto.make_deterministic_encrypter(derive_aes_key(private_key)),
