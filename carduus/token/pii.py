@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 from pyspark.sql import Column, DataFrame
 from pyspark.sql.functions import (
+    array,
+    array_join,
     col,
     when,
     year,
@@ -21,7 +23,7 @@ from pyspark.sql.types import (
     TimestampNTZType,
 )
 
-from carduus.token._impl import remap, normalize_text, first_char, metaphone
+from carduus.token._impl import null_safe, remap, normalize_text, first_char, metaphone
 
 
 class PiiTransform(ABC):
@@ -170,3 +172,8 @@ def enhance_pii(
             )
             new_pii = new_pii | set(enhancements.keys())
     return df.select(*all_columns), new_pii
+
+
+@null_safe
+def join_pii(*args: Column):
+    return array_join(array(*args), delimiter=":")

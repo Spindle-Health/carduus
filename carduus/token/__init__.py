@@ -1,12 +1,14 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Iterable
 from enum import Enum
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, lit, sha2, udf, to_binary, base64, array_join, array
+from pyspark.sql.functions import col, lit, sha2, udf, to_binary, base64
 from pyspark.sql.types import BinaryType
 from carduus.token.pii import (
     normalize_pii,
     enhance_pii,
+    join_pii,
     PiiTransform,
     NameTransform,
     GenderTransform,
@@ -118,7 +120,7 @@ class OpprlToken(Enum):
 def tokenize(
     df: DataFrame,
     pii_transforms: dict[str, PiiTransform | OpprlPii],
-    tokens: Iterable[TokenSpec | OpprlToken],
+    tokens: Sequence[TokenSpec | OpprlToken],
     private_key: bytes,
 ) -> DataFrame:
     """Adds encrypted token columns based on PII.
@@ -164,10 +166,7 @@ def tokenize(
 
     return (
         pii.withColumns(
-            {
-                t.name: array_join(array(*[col(f) for f in sorted(t.fields)]), delimiter=":")
-                for t in tokens_
-            }
+            {t.name: join_pii(*[col(f) for f in sorted(t.fields)]) for t in tokens_}
         )
         .withColumns(
             {

@@ -15,7 +15,9 @@ DEFAULT_NONCE = bytes([0] * 12)
 
 
 def make_deterministic_encrypter(key: bytes):
-    def encrypt(message: bytearray) -> bytes:
+    def encrypt(message: bytearray | None) -> bytes | None:
+        if not message:
+            return None
         from cryptography.hazmat.primitives.ciphers.aead import AESGCMSIV
 
         return AESGCMSIV(key).encrypt(DEFAULT_NONCE, bytes(message), None)
@@ -24,7 +26,9 @@ def make_deterministic_encrypter(key: bytes):
 
 
 def make_deterministic_decrypter(key: bytes):
-    def decrypt(message: bytearray) -> bytes:
+    def decrypt(message: bytearray | None) -> bytes | None:
+        if not message:
+            return None
         from cryptography.hazmat.primitives.ciphers.aead import AESGCMSIV
 
         return AESGCMSIV(key).decrypt(DEFAULT_NONCE, bytes(message), None)
@@ -33,7 +37,9 @@ def make_deterministic_decrypter(key: bytes):
 
 
 def make_asymmetric_encrypter(public_key: bytes):
-    def encrypt(message: bytearray) -> bytes:
+    def encrypt(message: bytearray | None) -> bytes | None:
+        if not message:
+            return None
         from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
         key = load_pem_public_key(public_key)
@@ -51,7 +57,9 @@ def make_asymmetric_encrypter(public_key: bytes):
 
 
 def make_asymmetric_decrypter(private_key: bytes):
-    def decrypt(message: bytearray) -> bytes:
+    def decrypt(message: bytearray | None) -> bytes | None:
+        if not message:
+            return None
         from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
         key = load_pem_private_key(private_key, None)
