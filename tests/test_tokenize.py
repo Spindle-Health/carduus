@@ -1,6 +1,6 @@
 from datetime import date
 from pyspark.sql import Column, SparkSession, Row
-from pyspark.sql.types import DataType, StructType, StructField, LongType, StringType
+from pyspark.sql.types import DataType, StructType, StructField, LongType, StringType, DateType
 from pyspark.sql.functions import regexp_replace, substring
 from pyspark.testing.utils import assertDataFrameEqual, assertSchemaEqual
 from carduus.token import (
@@ -214,3 +214,112 @@ def test_custom_pii_and_token(spark: SparkSession, private_key: bytes):
             )
         ),
     )
+
+
+def test_null_safe_tokenize(spark: SparkSession, private_key: bytes):
+    actual = tokenize(
+        (
+            spark.createDataFrame(
+                [
+                    Row(
+                        first_name=None,
+                        last_name="PASTEUR",
+                        gender="M",
+                        birth_date=date(1822, 12, 27),
+                    ),
+                    Row(
+                        first_name="LOUIS",
+                        last_name=None,
+                        gender="M",
+                        birth_date=date(1822, 12, 27),
+                    ),
+                    Row(
+                        first_name="LOUIS",
+                        last_name="PASTEUR",
+                        gender=None,
+                        birth_date=date(1822, 12, 27),
+                    ),
+                    Row(
+                        first_name="LOUIS",
+                        last_name="PASTEUR",
+                        gender="M",
+                        birth_date=None,
+                    ),
+                ]
+            )
+        ),
+        pii_transforms={
+            "first_name": OpprlPii.first_name,
+            "last_name": OpprlPii.last_name,
+            "gender": OpprlPii.gender,
+            "birth_date": OpprlPii.birth_date,
+        },
+        tokens=[OpprlToken.token1, OpprlToken.token2, OpprlToken.token3],
+        private_key=private_key,
+    )
+
+    expected = spark.createDataFrame(
+        [
+            Row(
+                first_name=None,
+                last_name="PASTEUR",
+                gender="M",
+                birth_date=date(1822, 12, 27),
+                opprl_token_1=None,
+                opprl_token_2=None,
+                opprl_token_3=None,
+            ),
+            Row(
+                first_name="LOUIS",
+                last_name=None,
+                gender="M",
+                birth_date=date(1822, 12, 27),
+                opprl_token_1=None,
+                opprl_token_2=None,
+                opprl_token_3=None,
+            ),
+            Row(
+                first_name="LOUIS",
+                last_name="PASTEUR",
+                gender=None,
+                birth_date=date(1822, 12, 27),
+                opprl_token_1=None,
+                opprl_token_2=None,
+                opprl_token_3=None,
+            ),
+            Row(
+                first_name="LOUIS",
+                last_name="PASTEUR",
+                gender="M",
+                birth_date=None,
+                opprl_token_1=None,
+                opprl_token_2=None,
+                opprl_token_3=None,
+            ),
+        ],
+        StructType(
+            [
+                StructField("first_name", StringType()),
+                StructField("last_name", StringType()),
+                StructField("gender", StringType()),
+                StructField("birth_date", DateType()),
+                StructField("opprl_token_1", StringType()),
+                StructField("opprl_token_2", StringType()),
+                StructField("opprl_token_3", StringType()),
+            ]
+        ),
+    )
+
+    assertDataFrameEqual(actual, expected)
+
+
+def test_null_safe_transcypt(
+    spark: SparkSession, private_key: bytes, acme_public_key: bytes, acme_private_key: bytes
+):
+    tokens = spark.createDataFrame(
+        [Row(opprl_token_1=None)], StructType([StructField("opprl_token_1", StringType())])
+    )
+    ephemeral = transcrypt_out(tokens, ["opprl_token_1"], acme_public_key, private_key)
+    assertDataFrameEqual(tokens, ephemeral)
+    tokens2 = transcrypt_in(ephemeral, ["opprl_token_1"], acme_private_key)
+    assertDataFrameEqual(ephemeral, tokens2)

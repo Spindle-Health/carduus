@@ -44,3 +44,19 @@ metaphone = udf(_metaphone_udf_impl, returnType=StringType(), useArrow=False)
 
 def normalize_text(raw: Column) -> Column:
     return null_if(lambda c: length(c) == 0, trim(regexp_replace(upper(raw), "\\s+", " ")))
+
+
+def null_safe(func):
+    """A decorator for functions that operate over pyspark Column objects.
+    If any of the input columns are NULL, the result will be NULL. Otherwise the decorated function will be called.
+    """
+
+    def wrapper(*args: Column) -> Column:
+        if len(args) == 0:
+            return func()
+        result: Column = when(args[0].isNull(), lit(None))
+        for arg in args[1:]:
+            result = result.when(arg.isNull(), lit(None))
+        return result.otherwise(func(*args))
+
+    return wrapper
