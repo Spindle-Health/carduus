@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "carduus"
-version = "0.2.0"
+version = "0.3.0"
 description = "PySpark implementation of the Open Privacy Preserving Record Linkage protocol."
 authors = ["Eddie Pantridge <eddie@spindlehealth.com>"]
 readme = "README.md"
