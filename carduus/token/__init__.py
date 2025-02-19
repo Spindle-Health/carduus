@@ -3,7 +3,17 @@ from dataclasses import dataclass
 from typing import Iterable
 from enum import Enum
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, lit, sha2, udf, to_binary, base64
+from pyspark.sql.functions import (
+    col,
+    lit,
+    sha2,
+    udf,
+    to_binary,
+    base64,
+    array_join,
+    array,
+    replace,
+)
 from pyspark.sql.types import BinaryType
 from carduus.token.pii import (
     normalize_pii,
@@ -15,6 +25,7 @@ from carduus.token.pii import (
     DateTransform,
 )
 import carduus.token.crypto as crypto
+from carduus.token._impl import base64_no_newline
 from carduus.keys import derive_aes_key
 
 
@@ -117,6 +128,12 @@ class OpprlToken(Enum):
     )
 
 
+def peak(df: DataFrame, msg: str) -> DataFrame:
+    print(msg)
+    df.show(truncate=False)
+    return df
+
+
 def tokenize(
     df: DataFrame,
     pii_transforms: dict[str, PiiTransform | OpprlPii],
@@ -168,12 +185,16 @@ def tokenize(
         pii.withColumns(
             {t.name: join_pii(*[col(f) for f in sorted(t.fields)]) for t in tokens_}
         )
+        .transform(peak, "Joined")
         .withColumns(
             {
-                column: base64(encrypt(to_binary(sha2(col(column), 512), lit("hex"))))
+                column: base64_no_newline(
+                    encrypt(to_binary(sha2(col(column), 512), lit("hex")))
+                )
                 for column in token_columns
             }
         )
+        .transform(peak, "Encrypted")
         .drop(*new_pii_columns)
     )
 
@@ -211,7 +232,7 @@ def transcrypt_out(
     )
     return df.withColumns(
         {
-            column: base64(encrypt(decrypt(to_binary(col(column), lit("base64")))))
+            column: base64_no_newline(encrypt(decrypt(to_binary(col(column), lit("base64")))))
             for column in token_columns
         }
     )
@@ -244,7 +265,7 @@ def transcrypt_in(
     )
     return df.withColumns(
         {
-            column: base64(encrypt(decrypt(to_binary(col(column), lit("base64")))))
+            column: base64_no_newline(encrypt(decrypt(to_binary(col(column), lit("base64")))))
             for column in token_columns
         }
     )

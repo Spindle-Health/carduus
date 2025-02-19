@@ -11,6 +11,8 @@ from pyspark.sql.functions import (
     regexp_replace,
     trim,
     udf,
+    base64,
+    replace,
 )
 from pyspark.sql.types import StringType
 
@@ -60,3 +62,13 @@ def null_safe(func):
         return result.otherwise(func(*args))
 
     return wrapper
+
+
+def base64_no_newline(col: Column) -> Column:
+    """The default behavior of Spark's base64 function adds newlines every 76 characters for parity with unix.
+    Although this behavior doesn't make tokens invalid, it is likely to cause issues with users working with CSV files
+    that contain tokens.
+
+    See: https://superuser.com/questions/1225134/why-does-the-base64-of-a-string-contain-n
+    """
+    return replace(base64(col), lit("\r\n"), lit(""))
