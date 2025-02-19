@@ -4,7 +4,7 @@
 
 The open source implementation of the Open Privacy Preserving Record Linkage (OPPRL) protocol build on Spark.
 
-> :warning: Carduus has not reached a v1.0 release yet and therefore the API and behaviors are subject to change. See the [contributing](../CONTRIBUTING.md) guide if you would like to help the project.
+> :warning: Carduus has not reached a v1.0 release yet and therefore the API and behaviors are subject to change. See the [contributing](./CONTRIBUTING.md) guide if you would like to help the project.
 
 ## Rationale
 
