@@ -829,6 +829,9 @@
 <h1 id="carduus">Carduus</h1>
 <p><a href="https://badge.fury.io/py/carduus"><img alt="PyPI version" src="https://badge.fury.io/py/carduus.svg" /></a></p>
 <p>The open source implementation of the Open Privacy Preserving Record Linkage (OPPRL) protocol build on Spark.</p>
+<blockquote>
+<p><img alt="⚠" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/26a0.svg" title=":warning:" /> Carduus has not reached a v1.0 release yet and therefore the API and behaviors are subject to change. See the <a href="CONTRIBUTING/">contributing</a> guide if you would like to help the project.</p>
+</blockquote>
 <h2 id="rationale">Rationale</h2>
 <p>Privacy Preserving Record Linkage (PPRL) is crucial component to data de-identification systems. PPRL obfuscate identifying attributes or other sensitive information about the subjects described in the records of a dataset while still preserving the ability to link records pertaining to the same subject through the use of an encrypted token. This practice is sometimes referred to as "tokenization" and is one of the components of data de-identification.</p>
 <p>The task of PPRL is to replace the attributes of a every record denoting Personally Identifiable Information (PII) with a token produced by a one-way cryptographic function. This prevents observers of the tokenized data from obtaining the PII. The tokens are produced deterministically such that input records with the same, or similar, PII attributes will produce an identical token. This allows practitioners to associate records across datasets that are highly likely to belong to the same data subject without having access to PII.</p>
