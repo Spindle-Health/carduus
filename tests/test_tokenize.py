@@ -17,27 +17,26 @@ from carduus.token.pii import PiiTransform
 def test_tokenize_and_transcrypt_opprl(
     spark: SparkSession, private_key: bytes, acme_public_key: bytes, acme_private_key: bytes
 ):
+    pii = spark.createDataFrame(
+        [
+            Row(
+                id=1,
+                first_name="Louis",
+                last_name="Pasteur",
+                gender="male",
+                birth_date="1822-12-27",
+            ),
+            Row(
+                id=2,
+                first_name="louis",
+                last_name="pasteur",
+                gender="M",
+                birth_date="1822-12-27",
+            ),
+        ]
+    )
     tokens = tokenize(
-        (
-            spark.createDataFrame(
-                [
-                    Row(
-                        id=1,
-                        first_name="Louis",
-                        last_name="Pasteur",
-                        gender="male",
-                        birth_date="1822-12-27",
-                    ),
-                    Row(
-                        id=2,
-                        first_name="louis",
-                        last_name="pasteur",
-                        gender="M",
-                        birth_date="1822-12-27",
-                    ),
-                ]
-            )
-        ),
+        pii,
         pii_transforms={
             "first_name": OpprlPii.first_name,
             "last_name": OpprlPii.last_name,
@@ -96,12 +95,31 @@ def test_tokenize_and_transcrypt_opprl(
     # When transferring between parties, tokens from the same PII should _not_ be equal.
     assert sent_tokens.distinct().count() == 2
 
+    result = transcrypt_in(
+        sent_tokens.select("id", "opprl_token_1", "opprl_token_2", "opprl_token_3"),
+        token_columns=["opprl_token_1", "opprl_token_2", "opprl_token_3"],
+        private_key=acme_private_key,
+    )
+
+    # Check that trancryption and tokenization produce the same result.
     assertDataFrameEqual(
-        transcrypt_in(
-            sent_tokens.select("id", "opprl_token_1", "opprl_token_2", "opprl_token_3"),
-            token_columns=["opprl_token_1", "opprl_token_2", "opprl_token_3"],
+        result,
+        tokenize(
+            pii,
+            pii_transforms={
+                "first_name": OpprlPii.first_name,
+                "last_name": OpprlPii.last_name,
+                "gender": OpprlPii.gender,
+                "birth_date": OpprlPii.birth_date,
+            },
+            tokens=[OpprlToken.token1, OpprlToken.token2, OpprlToken.token3],
             private_key=acme_private_key,
-        ),
+        ).select("id", "opprl_token_1", "opprl_token_2", "opprl_token_3"),
+    )
+
+    # Test for token stability across changes.
+    assertDataFrameEqual(
+        result,
         (
             spark.createDataFrame(
                 [
